@@ -1,11 +1,10 @@
-Set List PWA v1.10
+Set List PWA v1.11
 
-Changes from v1.9:
-- Repertoire now has a ≡ drag handle immediately left of the + / ✓ button.
-- Repertoire manual order can be changed by dragging.
-- Current Set now has a − remove button immediately left of the ≡ drag handle.
-- Current Set drag-and-drop uses the same compact handle interaction.
-- All v1.9 functions and data compatibility are preserved.
+Fixes from v1.10:
+- Repertoire + / ✓ button is back on the same row, to the right of the ≡ drag handle.
+- Drag handles in Repertoire and Current Set now use touch events for reliable iPhone/iPad Safari dragging.
+- Desktop drag-and-drop remains available.
+- All v1.10 data and backup compatibility is preserved.
 - Caching remains disabled during development.
 
-Upload the four files to the repository root and confirm Version 1.10 is visible.
+Upload the four files to the repository root and confirm Version 1.11 is visible.

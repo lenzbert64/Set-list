@@ -306,7 +306,7 @@ $("bulkAdd").onclick=()=>{
    : "Добавлено песен: "+added+".";
 };
 
-$("exportBackup").onclick=()=>{
+$("exportBackup").onclick=async()=>{
  const data={
    app:"Set List",
    version:1,
@@ -316,13 +316,37 @@ $("exportBackup").onclick=()=>{
    encore:encore,
    saved:sets
  };
- const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
- const url=URL.createObjectURL(blob);
- const a=document.createElement("a");
- a.href=url;
- a.download="Set_List_Backup_"+new Date().toISOString().slice(0,10)+".json";
- document.body.appendChild(a); a.click(); a.remove();
- setTimeout(()=>URL.revokeObjectURL(url),1000);
+ const json=JSON.stringify(data,null,2);
+ const filename="Set_List_Backup_"+new Date().toISOString().slice(0,10)+".json";
+ const file=new File([json],filename,{type:"application/json"});
+
+ try{
+   if(navigator.share && (!navigator.canShare || navigator.canShare({files:[file]}))){
+     await navigator.share({
+       title:"Set List Backup",
+       text:"Резервная копия Set List",
+       files:[file]
+     });
+     return;
+   }
+ }catch(err){
+   if(err && err.name==="AbortError") return;
+ }
+
+ try{
+   const blob=new Blob([json],{type:"application/json"});
+   const url=URL.createObjectURL(blob);
+   const a=document.createElement("a");
+   a.href=url;
+   a.download=filename;
+   a.style.display="none";
+   document.body.appendChild(a);
+   a.click();
+   a.remove();
+   setTimeout(()=>URL.revokeObjectURL(url),3000);
+ }catch(err){
+   alert("Не удалось открыть экспорт. Попробуйте открыть сайт в Safari.");
+ }
 };
 $("importBackup").onclick=()=>$("backupFile").click();
 $("backupFile").onchange=async e=>{

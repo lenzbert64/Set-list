@@ -1,6 +1,10 @@
-Set List PWA v1.5
-- Backup / Restore added to Saved Sets.
-- Export saves repertoire, manual order, Current Set and Saved Sets to JSON.
-- Import restores them after confirmation.
-- All v1.4 functions retained.
-After GitHub update open the site with ?v=15.
+Set List PWA v1.6
+
+Исправление Backup:
+- Export Backup теперь использует системное меню «Поделиться» на iPhone/iPad.
+- Из меню можно выбрать «Сохранить в Файлы».
+- Если Web Share недоступен, используется обычное скачивание как запасной вариант.
+- Import Backup сохранён без изменений.
+- Все функции v1.5 сохранены.
+
+После загрузки 4 файлов в GitHub откройте сайт с ?v=16.

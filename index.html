@@ -165,6 +165,24 @@ function summary(){
  $("total").textContent=fmt(music+pauses);
  $("count").textContent=all.length;
 }
+function editSong(id){
+ const s=songs.find(x=>x.id===id); if(!s)return;
+ const title=prompt("Название песни:",s.title); if(title===null)return;
+ const cleanTitle=title.trim(); if(!cleanTitle){alert("Название не может быть пустым.");return}
+ const minText=prompt("Минуты:",String(Math.floor(s.duration/60))); if(minText===null)return;
+ const secText=prompt("Секунды (0–59):",String(s.duration%60)); if(secText===null)return;
+ const min=Number(minText), sec=Number(secText);
+ if(!Number.isInteger(min)||min<0||!Number.isInteger(sec)||sec<0||sec>59){alert("Неверно указано время.");return}
+ const projectText=prompt("Проект: Браво или MessAge",s.project); if(projectText===null)return;
+ const normalized=projectText.trim().toLowerCase();
+ let project;
+ if(normalized==="браво")project="Браво";
+ else if(normalized==="message")project="MessAge";
+ else{alert("Проект должен быть «Браво» или «MessAge».");return}
+ s.title=cleanTitle; s.duration=min*60+sec; s.project=project;
+ persist(); renderAll();
+}
+
 function addTo(id,target){
  if(used(id))return;
  (target==="encore"?encore:main).push({id,pause:0});
@@ -182,7 +200,7 @@ function renderRep(){
  if(!list.length){host.innerHTML='<div class="empty">Ничего не найдено</div>';return}
  list.forEach(s=>{
    const row=document.createElement("div"); row.className="row";
-   row.innerHTML='<div><div class="title"></div><div class="meta"></div></div><div class="actions"><button class="btn mainAdd" type="button">+ Main</button><button class="btn encAdd" type="button">+ Encore</button><button class="btn up" type="button">↑</button><button class="btn down" type="button">↓</button></div>';
+   row.innerHTML='<div><div class="title"></div><div class="meta"></div></div><div class="actions"><button class="btn mainAdd" type="button">+ Main</button><button class="btn encAdd" type="button">+ Encore</button><button class="btn editSong" type="button">Edit</button><button class="btn up" type="button">↑</button><button class="btn down" type="button">↓</button></div>';
    row.querySelector(".title").textContent=s.title;
    const inMain=main.some(x=>x.id===s.id), inEncore=encore.some(x=>x.id===s.id);
    const where=inMain?"✓ Main Set":inEncore?"✓ Encore":"";
@@ -193,6 +211,7 @@ function renderRep(){
    else if(inEncore){row.querySelector(".mainAdd").textContent="Main";row.querySelector(".encAdd").textContent="✓ In Encore"}
    row.querySelector(".mainAdd").onclick=()=>addTo(s.id,"main");
    row.querySelector(".encAdd").onclick=()=>addTo(s.id,"encore");
+   row.querySelector(".editSong").onclick=()=>editSong(s.id);
    row.querySelector(".up").onclick=()=>{const i=songs.indexOf(s);if(i>0){[songs[i-1],songs[i]]=[songs[i],songs[i-1]];persist();renderRep()}};
    row.querySelector(".down").onclick=()=>{const i=songs.indexOf(s);if(i<songs.length-1){[songs[i],songs[i+1]]=[songs[i+1],songs[i]];persist();renderRep()}};
    host.appendChild(row);

@@ -1,9 +1,8 @@
-Set List PWA v1.13
+Set List PWA v1.14
 
-- Undo last change added only to Current Set, above Clear current set.
-- One-level Undo; no Redo.
-- Restores exact previous Current Set state/order.
-- Works for add/remove, minus removal, Current Set reorder, clear, and opening a Saved Set.
-- Repertoire sorting does not affect Undo.
-- Compatible with v1.12 data/backups.
+Visual change only:
+- Undo last change and Clear current set are now two matching full-width rows/buttons.
+- Undo is directly above Clear.
+- Undo behavior is unchanged from v1.13.
+- All other v1.13 functionality is unchanged.
 - Caching remains disabled during development.

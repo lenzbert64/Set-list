@@ -23,13 +23,14 @@ h1{font-size:23px;margin:0}
 .toolbar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px}
 input,select,textarea{min-height:38px;border:1px solid #cfd3d8;border-radius:9px;background:#fff;color:#111;padding:7px 9px;min-width:0}
 textarea{width:100%;min-height:120px;resize:vertical}
-.row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:7px 0;border-top:1px solid #eceef1}
+.row{display:grid;grid-template-columns:minmax(0,1fr) 32px 38px;gap:7px;align-items:center;padding:7px 0;border-top:1px solid #eceef1}
 .row:first-child{border-top:0}
 .songline{display:flex;align-items:baseline;gap:8px;min-width:0}
 .title{font-weight:650;line-height:1.18}
 .duration{font-size:13px;color:#6c7179;white-space:nowrap}
 .actions{display:flex;gap:5px;align-items:center;justify-content:flex-end}
-.toggle{width:38px;min-width:38px;padding:4px;font-size:18px;font-weight:700}
+.toggle,.remove{width:38px;min-width:38px;padding:4px;font-size:18px;font-weight:700}
+.remove{border-color:#d5d7db;background:#fff;color:#555}
 .toggle.inset{background:#34c759;color:#fff;border-color:#34c759}
 .section{font-size:16px;font-weight:700;margin-bottom:6px}
 .note,.meta{font-size:12px;color:#6c7179}
@@ -43,7 +44,7 @@ textarea{width:100%;min-height:120px;resize:vertical}
 .bulkActions select{min-width:110px}
 .stickyStats{position:sticky;top:0;z-index:20;background:rgba(244,244,246,.94);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:6px 0}
 .statbar{background:#fff;border:1px solid #dadde1;border-radius:10px;padding:8px 10px;text-align:center;font-weight:650}
-.setrow{display:grid;grid-template-columns:24px minmax(0,1fr) 32px;gap:7px;align-items:center;padding:8px 0;border-top:1px solid #eceef1;touch-action:pan-y}
+.setrow{display:grid;grid-template-columns:24px minmax(0,1fr) 38px 32px;gap:7px;align-items:center;padding:8px 0;border-top:1px solid #eceef1;touch-action:pan-y}
 .setrow:first-child{border-top:0}
 .num{font-size:13px;color:#777;text-align:center}
 .handle{font-size:22px;color:#777;text-align:center;cursor:grab;user-select:none;-webkit-user-select:none;touch-action:none}
@@ -74,7 +75,7 @@ textarea{width:100%;min-height:120px;resize:vertical}
 <body>
 <div class="wrap">
   <div class="header">
-    <div><h1>Set List</h1><div class="version">Version 1.9</div></div>
+    <div><h1>Set List</h1><div class="version">Version 1.10</div></div>
   </div>
 
   <div class="tabs">
@@ -220,63 +221,91 @@ function bindLongPress(el,id){
  el.addEventListener("touchcancel",cancel,{passive:true});
  el.addEventListener("contextmenu",e=>{e.preventDefault();editSong(id)});
 }
+function reorderVisibleSongs(visibleIds){
+ const visibleSet=new Set(visibleIds),slots=[];
+ songs.forEach((s,i)=>{if(visibleSet.has(s.id))slots.push(i)});
+ if(slots.length!==visibleIds.length)return;
+ const map=new Map(songs.map(s=>[s.id,s]));
+ slots.forEach((slot,i)=>{songs[slot]=map.get(visibleIds[i])});
+ persist();renderRep();
+}
+function enableHandleDrag(handle,row,host,onFinish){
+ let active=false;
+ const moveAt=y=>{
+  const rows=[...host.children].filter(x=>x.classList.contains("row")||x.classList.contains("setrow"));
+  const target=rows.find(r=>{
+   if(r===row)return false;
+   const b=r.getBoundingClientRect();
+   return y>=b.top&&y<=b.bottom;
+  });
+  if(!target)return;
+  const b=target.getBoundingClientRect();
+  if(y<b.top+b.height/2)host.insertBefore(row,target);
+  else host.insertBefore(row,target.nextSibling);
+ };
+ handle.addEventListener("pointerdown",e=>{
+  active=true;
+  if(handle.setPointerCapture) handle.setPointerCapture(e.pointerId);
+  row.classList.add("dragging");
+  e.preventDefault();
+ });
+ handle.addEventListener("pointermove",e=>{
+  if(!active)return;
+  moveAt(e.clientY);
+  e.preventDefault();
+ });
+ const finish=e=>{
+  if(!active)return;
+  active=false;
+  row.classList.remove("dragging");
+  try{if(handle.releasePointerCapture) handle.releasePointerCapture(e.pointerId)}catch(_){}
+  onFinish();
+ };
+ handle.addEventListener("pointerup",finish);
+ handle.addEventListener("pointercancel",finish);
+}
 function renderRep(){
  const q=$("search").value.trim().toLowerCase(),f=$("filter").value,host=$("rep");
  host.innerHTML="";
  const list=songs.filter(s=>(f==="All"||s.project===f)&&s.title.toLowerCase().includes(q));
  if(!list.length){host.innerHTML='<div class="empty">Ничего не найдено</div>';return}
  list.forEach(s=>{
-  const row=document.createElement("div");row.className="row";
-  row.innerHTML='<div class="songline"><div class="title"></div><div class="duration"></div></div><button class="btn toggle" type="button"></button>';
-  const title=row.querySelector(".title"),btn=row.querySelector(".toggle");
-  title.textContent=s.title;row.querySelector(".duration").textContent=fmt(s.duration);
+  const row=document.createElement("div");row.className="row";row.dataset.id=s.id;
+  row.innerHTML='<div class="songline"><div class="title"></div><div class="duration"></div></div><div class="handle" title="Перетащить">≡</div><button class="btn toggle" type="button"></button>';
+  const title=row.querySelector(".title"),btn=row.querySelector(".toggle"),handle=row.querySelector(".handle");
+  title.textContent=s.title;
+  row.querySelector(".duration").textContent=fmt(s.duration);
   const selected=inSet(s.id);
   btn.textContent=selected?"✓":"+";
   btn.classList.toggle("inset",selected);
   btn.setAttribute("aria-label",selected?"Убрать из Current Set":"Добавить в Current Set");
   btn.onclick=()=>toggleSet(s.id);
   bindLongPress(title,s.id);
+  enableHandleDrag(handle,row,host,()=>{
+    const visibleIds=[...host.querySelectorAll(".row")].map(r=>r.dataset.id);
+    reorderVisibleSongs(visibleIds);
+  });
   host.appendChild(row);
  });
 }
-let dragIndex=null;
 function renderSet(){
  const host=$("main");host.innerHTML="";
  if(!main.length){host.innerHTML='<div class="empty">Пока пусто</div>';return}
  main.forEach((item,i)=>{
   const s=byId(item.id);if(!s)return;
-  const row=document.createElement("div");row.className="setrow";row.dataset.index=i;
-  row.innerHTML='<div class="num"></div><div class="songline"><div class="title"></div><div class="duration"></div></div><div class="handle" draggable="true">≡</div>';
+  const row=document.createElement("div");row.className="setrow";row.dataset.id=s.id;
+  row.innerHTML='<div class="num"></div><div class="songline"><div class="title"></div><div class="duration"></div></div><button class="btn remove" type="button" aria-label="Убрать из Current Set">−</button><div class="handle" title="Перетащить">≡</div>';
   row.querySelector(".num").textContent=i+1;
   row.querySelector(".title").textContent=s.title;
   row.querySelector(".duration").textContent=fmt(s.duration);
+  row.querySelector(".remove").onclick=()=>{main=main.filter(x=>x.id!==s.id);persist();renderAll()};
   const handle=row.querySelector(".handle");
-
-  handle.addEventListener("dragstart",e=>{dragIndex=i;row.classList.add("dragging");e.dataTransfer.effectAllowed="move"});
-  handle.addEventListener("dragend",()=>{dragIndex=null;row.classList.remove("dragging");document.querySelectorAll(".dragover").forEach(x=>x.classList.remove("dragover"))});
-  row.addEventListener("dragover",e=>{e.preventDefault();row.classList.add("dragover")});
-  row.addEventListener("dragleave",()=>row.classList.remove("dragover"));
-  row.addEventListener("drop",e=>{
-   e.preventDefault();row.classList.remove("dragover");
-   if(dragIndex===null||dragIndex===i)return;
-   const [moved]=main.splice(dragIndex,1);main.splice(i,0,moved);persist();renderAll();
+  enableHandleDrag(handle,row,host,()=>{
+   const ids=[...host.querySelectorAll(".setrow")].map(r=>r.dataset.id);
+   main=ids.map(id=>({id}));
+   persist();
+   renderAll();
   });
-
-  let touchStartY=0,touchIndex=i,active=false;
-  handle.addEventListener("touchstart",e=>{active=true;touchStartY=e.touches[0].clientY;touchIndex=Number(row.dataset.index);row.classList.add("dragging")},{passive:false});
-  handle.addEventListener("touchmove",e=>{
-   if(!active)return;e.preventDefault();
-   const y=e.touches[0].clientY;
-   const rows=[...host.querySelectorAll(".setrow")];
-   let target=rows.findIndex(r=>{const b=r.getBoundingClientRect();return y>=b.top&&y<=b.bottom});
-   if(target<0)target=y<rows[0].getBoundingClientRect().top?0:rows.length-1;
-   if(target!==touchIndex){
-    const [moved]=main.splice(touchIndex,1);main.splice(target,0,moved);touchIndex=target;
-    persist();renderSet();summary();
-    const newRow=host.querySelectorAll(".setrow")[target];if(newRow)newRow.classList.add("dragging");
-   }
-  },{passive:false});
-  handle.addEventListener("touchend",()=>{active=false;renderAll()},{passive:true});
   host.appendChild(row);
  });
 }

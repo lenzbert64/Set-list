@@ -93,12 +93,27 @@ button, input, select, textarea, summary, .row, .setrow, .handle, .title, .tab {
 
 .setNameStats{margin-top:8px}
 .setNameStats .statbar{font-weight:700}
+
+/* Current Set: keep the time/count bar visible while scrolling. */
+#panel-set > .stickyStats:first-child{
+  position:sticky;
+  top:0;
+  z-index:20;
+  margin-bottom:6px;
+  background:var(--bg);
+}
+/* Compact spacing between Total and saved-set name, matching Repertoire rhythm. */
+#panel-set .setNameStats{
+  margin-top:0;
+  margin-bottom:8px;
+}
+
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="header">
-    <div><h1>Set List</h1><div class="version">Version 1.21</div></div>
+    <div><h1>Set List</h1><div class="version">Version 1.22</div></div>
   </div>
 
   <div class="tabs">

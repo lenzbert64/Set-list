@@ -1,6 +1,7 @@
-Set List PWA v1.21
-Fix for v1.20:
-- The active Saved Set name bar is now actually present in Current Set, directly below Total.
-- The active set name is persisted locally.
-- Open a Saved Set by tapping its name; Current Set then shows that name.
-- All other v1.20 functionality remains unchanged.
+Set List PWA v1.22
+
+Current Set UI refinement:
+- The song count / total time bar is sticky while scrolling.
+- The saved-set name bar is not sticky.
+- Spacing between the total bar and set-name bar is reduced to match the compact Repertoire layout.
+- All v1.21 behavior and data remain unchanged.

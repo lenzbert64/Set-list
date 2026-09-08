@@ -1,10 +1,9 @@
-Set List PWA v1.12
+Set List PWA v1.13
 
-Fix from v1.11:
-- Restored the sticky Current Set summary in Repertoire.
-- Repertoire now always shows: song count + Total while selecting songs.
-- The Current Set sticky summary remains unchanged.
-- All v1.11 functions, data, and backups remain compatible.
+- Undo last change added only to Current Set, above Clear current set.
+- One-level Undo; no Redo.
+- Restores exact previous Current Set state/order.
+- Works for add/remove, minus removal, Current Set reorder, clear, and opening a Saved Set.
+- Repertoire sorting does not affect Undo.
+- Compatible with v1.12 data/backups.
 - Caching remains disabled during development.
-
-Upload the four files to the repository root and confirm Version 1.12 is visible.

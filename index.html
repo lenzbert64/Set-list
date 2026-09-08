@@ -52,6 +52,8 @@ textarea{width:100%;min-height:120px;resize:vertical}
 .setrow.dragover{border-top:2px solid #777}
 .savebar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px}
 .backup{margin-top:28px}
+#undoSet{margin-right:6px}
+#undoSet:disabled{opacity:.42}
 .holdhint{font-size:11px;color:#8a8f96;margin-top:4px}
 @media(max-width:650px){
  .wrap{padding:10px}
@@ -75,7 +77,7 @@ textarea{width:100%;min-height:120px;resize:vertical}
 <body>
 <div class="wrap">
   <div class="header">
-    <div><h1>Set List</h1><div class="version">Version 1.12</div></div>
+    <div><h1>Set List</h1><div class="version">Version 1.13</div></div>
   </div>
 
   <div class="tabs">
@@ -126,6 +128,7 @@ textarea{width:100%;min-height:120px;resize:vertical}
     <div class="stickyStats"><div class="statbar"><span id="count">0</span> songs · Total <span id="total">0:00</span></div></div>
     <div class="card"><div id="main"></div></div>
     <div class="card">
+      <button id="undoSet" class="btn" type="button" disabled>Undo last change</button>
       <button id="clearSet" class="btn" type="button">Clear current set</button>
     </div>
     <div class="card">
@@ -175,6 +178,10 @@ let saved=JSON.parse(localStorage.getItem("setlist_saved")||"[]").map(x=>({
  name:x.name,
  main:[...(x.main||[]),...(x.encore||[])].filter((v,i,a)=>a.findIndex(y=>y.id===v.id)===i)
 }));
+let undoMain=null;
+function rememberMainForUndo(){undoMain=clone(main);updateUndoButton()}
+function updateUndoButton(){const b=$("undoSet");if(b)b.disabled=!undoMain}
+
 
 function persist(){
  localStorage.setItem("setlist_songs",JSON.stringify(songs));
@@ -210,6 +217,7 @@ function editSong(id){
  persist();renderAll();
 }
 function toggleSet(id){
+ rememberMainForUndo();
  const i=main.findIndex(x=>x.id===id);
  if(i>=0)main.splice(i,1); else main.push({id});
  persist();renderAll();
@@ -232,7 +240,7 @@ function reorderVisibleSongs(visibleIds){
  slots.forEach((slot,i)=>{songs[slot]=map.get(visibleIds[i])});
  persist();renderRep();
 }
-function enableHandleDrag(handle,row,host,onFinish){
+function enableHandleDrag(handle,row,host,onFinish,onStart){
  let active=false;
 
  const moveRowToPoint=(x,y)=>{
@@ -247,6 +255,7 @@ function enableHandleDrag(handle,row,host,onFinish){
  // iPhone / iPad Safari
  handle.addEventListener("touchstart",e=>{
   active=true;
+  if(onStart)onStart();
   row.classList.add("dragging");
   e.preventDefault();
  },{passive:false});
@@ -272,6 +281,7 @@ function enableHandleDrag(handle,row,host,onFinish){
  handle.draggable=true;
  handle.addEventListener("dragstart",e=>{
   active=true;
+  if(onStart)onStart();
   row.classList.add("dragging");
   if(e.dataTransfer){
     e.dataTransfer.effectAllowed="move";
@@ -324,14 +334,14 @@ function renderSet(){
   row.querySelector(".num").textContent=i+1;
   row.querySelector(".title").textContent=s.title;
   row.querySelector(".duration").textContent=fmt(s.duration);
-  row.querySelector(".remove").onclick=()=>{main=main.filter(x=>x.id!==s.id);persist();renderAll()};
+  row.querySelector(".remove").onclick=()=>{rememberMainForUndo();main=main.filter(x=>x.id!==s.id);persist();renderAll()};
   const handle=row.querySelector(".handle");
   enableHandleDrag(handle,row,host,()=>{
    const ids=[...host.querySelectorAll(".setrow")].map(r=>r.dataset.id);
    main=ids.map(id=>({id}));
    persist();
    renderAll();
-  });
+  },rememberMainForUndo);
   host.appendChild(row);
  });
 }
@@ -343,7 +353,7 @@ function renderSaved(){
   row.innerHTML='<div><div class="title"></div><div class="meta"></div></div><div class="actions"><button class="btn primary open">Open</button><button class="btn copy">Duplicate</button><button class="btn del">Delete</button></div>';
   row.querySelector(".title").textContent=x.name;
   row.querySelector(".meta").textContent=`${x.main.length} songs`;
-  row.querySelector(".open").onclick=()=>{main=clone(x.main);persist();switchTab("set");renderAll()};
+  row.querySelector(".open").onclick=()=>{rememberMainForUndo();main=clone(x.main);persist();switchTab("set");renderAll()};
   row.querySelector(".copy").onclick=()=>{saved.push({name:x.name+" copy",main:clone(x.main)});persist();renderSaved()};
   row.querySelector(".del").onclick=()=>{if(confirm("Удалить сохранённый сет?")){saved.splice(i,1);persist();renderSaved()}};
   host.appendChild(row);
@@ -353,7 +363,7 @@ function switchTab(name){
  document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.tab===name));
  document.querySelectorAll(".panel").forEach(p=>p.classList.toggle("active",p.id==="panel-"+name));
 }
-function renderAll(){renderRep();renderSet();renderSaved();summary()}
+function renderAll(){renderRep();renderSet();renderSaved();summary();updateUndoButton()}
 
 document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
 $("search").oninput=renderRep;$("filter").onchange=renderRep;
@@ -384,9 +394,16 @@ $("bulkAdd").onclick=()=>{
  $("bulkResult").textContent=skipped.length?`Добавлено: ${added}. Не распознаны строки: ${skipped.join(", ")}.`:`Добавлено песен: ${added}.`;
 };
 
+$("undoSet").onclick=()=>{
+ if(!undoMain)return;
+ main=clone(undoMain);
+ undoMain=null;
+ persist();renderAll();
+};
 $("clearSet").onclick=()=>{
  if(!main.length)return;
  if(!confirm("Очистить текущий сет?"))return;
+ rememberMainForUndo();
  main=[];persist();renderAll();
 };
 $("saveSet").onclick=()=>{
@@ -420,6 +437,7 @@ $("backupFile").onchange=async e=>{
   if(!data||data.app!=="Set List"||!Array.isArray(data.songs)||!Array.isArray(data.main)||!Array.isArray(data.saved))throw new Error("invalid");
   if(!confirm("Восстановить данные из backup? Текущие данные будут заменены.")){e.target.value="";return}
   songs=data.songs;
+  undoMain=null;
   main=[...(data.main||[]),...(data.encore||[])].filter((v,i,a)=>a.findIndex(y=>y.id===v.id)===i).map(x=>({id:x.id}));
   saved=data.saved.map(x=>({name:x.name,main:[...(x.main||[]),...(x.encore||[])].filter((v,i,a)=>a.findIndex(y=>y.id===v.id)===i).map(y=>({id:y.id}))}));
   persist();renderAll();alert("Backup восстановлен.");

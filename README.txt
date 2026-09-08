@@ -1,10 +1,6 @@
-Set List PWA v1.6
-
-Исправление Backup:
-- Export Backup теперь использует системное меню «Поделиться» на iPhone/iPad.
-- Из меню можно выбрать «Сохранить в Файлы».
-- Если Web Share недоступен, используется обычное скачивание как запасной вариант.
-- Import Backup сохранён без изменений.
-- Все функции v1.5 сохранены.
-
-После загрузки 4 файлов в GitHub откройте сайт с ?v=16.
+Set List PWA v1.7
+- Visible Version 1.7 label.
+- Old service workers and Cache Storage are removed on load.
+- Offline caching temporarily disabled during development.
+- Existing app data in localStorage is not deleted.
+- All v1.6 features retained.

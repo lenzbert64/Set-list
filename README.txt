@@ -1,8 +1,9 @@
-Set List PWA v1.15
+Set List PWA v1.17
 
-Change from v1.14:
-- Prevents accidental iPhone/iPad Safari double-tap zoom on app controls.
-- Normal pinch-to-zoom remains available.
-- Drag handles keep their touch behavior.
-- All v1.14 functionality and data remain unchanged.
+Saved Sets metadata update:
+- Under each saved set name, shows both song count and total duration.
+- Format: N songs · Total MM:SS
+- Saved Set name remains the tap target for opening.
+- Compact Duplicate and Delete buttons remain on the right.
+- All v1.16 functionality and data remain unchanged.
 - Caching remains disabled during development.

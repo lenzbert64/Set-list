@@ -1,6 +1,10 @@
-Set List PWA v1.7
-- Visible Version 1.7 label.
-- Old service workers and Cache Storage are removed on load.
-- Offline caching temporarily disabled during development.
-- Existing app data in localStorage is not deleted.
-- All v1.6 features retained.
+Set List PWA v1.8
+
+Исправление Backup:
+- Исправлена ошибка имени переменной Saved Sets, из-за которой Export Backup молча не запускался.
+- Исправлено восстановление Saved Sets в Import Backup.
+- Добавлено сообщение при неожиданной ошибке экспорта.
+- Version 1.8 отображается под заголовком.
+- Кэширование по-прежнему временно отключено.
+
+После загрузки 4 файлов в GitHub просто перезагрузите сайт и убедитесь, что видно Version 1.8.

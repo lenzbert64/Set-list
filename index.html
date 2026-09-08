@@ -59,7 +59,7 @@ textarea{width:100%;min-height:150px;resize:vertical}
 <body>
 <div class="wrap">
   <div class="header">
-    <div><h1>Set List</h1><div style="font-size:12px;color:#888;margin-top:-8px;margin-bottom:10px">Version 1.7</div><div class="sub">PWA prototype</div></div>
+    <div><h1>Set List</h1><div style="font-size:12px;color:#888;margin-top:-8px;margin-bottom:10px">Version 1.8</div><div class="sub">PWA prototype</div></div>
     <div class="stats">
       <div class="pill">Music <strong id="music">0:00</strong></div>
       <div class="pill">Total <strong id="total">0:00</strong></div>
@@ -307,6 +307,7 @@ $("bulkAdd").onclick=()=>{
 };
 
 $("exportBackup").onclick=async()=>{
+ try{
  const data={
    app:"Set List",
    version:1,
@@ -314,7 +315,7 @@ $("exportBackup").onclick=async()=>{
    songs:songs,
    main:main,
    encore:encore,
-   saved:sets
+   saved:saved
  };
  const json=JSON.stringify(data,null,2);
  const filename="Set_List_Backup_"+new Date().toISOString().slice(0,10)+".json";
@@ -347,6 +348,9 @@ $("exportBackup").onclick=async()=>{
  }catch(err){
    alert("Не удалось открыть экспорт. Попробуйте открыть сайт в Safari.");
  }
+ }catch(err){
+   alert("Ошибка Backup: "+(err && err.message ? err.message : "unknown"));
+ }
 };
 $("importBackup").onclick=()=>$("backupFile").click();
 $("backupFile").onchange=async e=>{
@@ -355,7 +359,7 @@ $("backupFile").onchange=async e=>{
    const data=JSON.parse(await file.text());
    if(!data||data.app!=="Set List"||!Array.isArray(data.songs)||!Array.isArray(data.main)||!Array.isArray(data.encore)||!Array.isArray(data.saved))throw new Error("invalid");
    if(!confirm("Восстановить данные из backup? Текущие данные будут заменены.")){e.target.value="";return}
-   songs=data.songs; main=data.main; encore=data.encore; sets=data.saved;
+   songs=data.songs; main=data.main; encore=data.encore; saved=data.saved;
    persist(); renderAll(); alert("Backup восстановлен.");
  }catch(err){alert("Не удалось прочитать backup-файл.");}
  e.target.value="";

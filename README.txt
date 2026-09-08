@@ -1,6 +1,6 @@
-Set List PWA v1.19
-
-Text-only interface change:
-- "Add songs in bulk" changed to "Add songs as a list".
-- All v1.18 functionality and stored data remain unchanged.
-- Caching remains disabled during development.
+Set List PWA v1.20
+- Shows the active Saved Set name on Current Set directly below the Total bar.
+- Opening a Saved Set loads its name.
+- Clear removes the name; Undo restores it.
+- Name persists locally and is included in new backups when possible.
+- Older data remains compatible.

@@ -90,12 +90,15 @@ button, input, select, textarea, summary, .row, .setrow, .handle, .title, .tab {
   touch-action: none;
 }
 
+
+.setNameStats{margin-top:8px}
+.setNameStats .statbar{font-weight:700}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="header">
-    <div><h1>Set List</h1><div class="version">Version 1.19</div></div>
+    <div><h1>Set List</h1><div class="version">Version 1.20</div></div>
   </div>
 
   <div class="tabs">
@@ -186,6 +189,7 @@ const $=id=>document.getElementById(id);
 let songs=JSON.parse(localStorage.getItem("setlist_songs")||"null") ||
  starter.map((x,i)=>({id:"m"+i,title:x[0],duration:x[1]*60+x[2],project:"MessAge"}));
 let main=JSON.parse(localStorage.getItem("setlist_main")||"[]");
+let currentSetName=localStorage.getItem("setlist_current_name")||"";
 let oldEncore=JSON.parse(localStorage.getItem("setlist_encore")||"[]");
 if(oldEncore.length){
  const ids=new Set(main.map(x=>x.id));
@@ -197,7 +201,7 @@ let saved=JSON.parse(localStorage.getItem("setlist_saved")||"[]").map(x=>({
  main:[...(x.main||[]),...(x.encore||[])].filter((v,i,a)=>a.findIndex(y=>y.id===v.id)===i)
 }));
 let undoMain=null;
-function rememberMainForUndo(){undoMain=clone(main);updateUndoButton()}
+function rememberMainForUndo(){undoMain={main:clone(main),name:currentSetName};updateUndoButton()}
 function updateUndoButton(){const b=$("undoSet");if(b)b.disabled=!undoMain}
 
 
@@ -216,6 +220,8 @@ function summary(){
  $("count").textContent=main.length;
  $("repTotal").textContent=fmt(total);
  $("repCount").textContent=main.length;
+ $("currentSetName").textContent=currentSetName;
+ $("currentSetNameBar").hidden=!currentSetName;
 }
 function editSong(id){
  const s=byId(id); if(!s)return;
@@ -372,7 +378,7 @@ function renderSaved(){
   row.querySelector(".title").textContent=x.name;
   const savedTotal=x.main.reduce((n,item)=>n+(byId(item.id)?.duration||0),0);
   row.querySelector(".meta").textContent=`${x.main.length} songs · Total ${fmt(savedTotal)}`;
-  const openSet=()=>{rememberMainForUndo();main=clone(x.main);persist();switchTab("set");renderAll()};
+  const openSet=()=>{rememberMainForUndo();main=clone(x.main);currentSetName=x.name;persist();switchTab("set");renderAll()};
   const open=row.querySelector(".savedopen");
   open.onclick=openSet;
   open.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openSet()}};
@@ -418,7 +424,8 @@ $("bulkAdd").onclick=()=>{
 
 $("undoSet").onclick=()=>{
  if(!undoMain)return;
- main=clone(undoMain);
+ main=clone(undoMain.main);
+ currentSetName=undoMain.name||"";
  undoMain=null;
  persist();renderAll();
 };
@@ -426,7 +433,7 @@ $("clearSet").onclick=()=>{
  if(!main.length)return;
  if(!confirm("Clear the current set?"))return;
  rememberMainForUndo();
- main=[];persist();renderAll();
+ main=[];currentSetName="";persist();renderAll();
 };
 $("saveSet").onclick=()=>{
  const name=$("setName").value.trim();if(!name)return;
@@ -460,6 +467,7 @@ $("backupFile").onchange=async e=>{
   if(!confirm("Восстановить данные из backup? Текущие данные будут заменены.")){e.target.value="";return}
   songs=data.songs;
   undoMain=null;
+  currentSetName=data.currentSetName||"";
   main=[...(data.main||[]),...(data.encore||[])].filter((v,i,a)=>a.findIndex(y=>y.id===v.id)===i).map(x=>({id:x.id}));
   saved=data.saved.map(x=>({name:x.name,main:[...(x.main||[]),...(x.encore||[])].filter((v,i,a)=>a.findIndex(y=>y.id===v.id)===i).map(y=>({id:y.id}))}));
   persist();renderAll();alert("Backup восстановлен.");

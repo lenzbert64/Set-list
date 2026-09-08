@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#111214">
+<link rel="manifest" href="manifest.json">
+<title>Set List</title>
+<style>
+:root{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;color-scheme:light dark}
+*{box-sizing:border-box}
+body{margin:0;background:#f4f4f6;color:#111}
+button,input,select{font:inherit}
+.wrap{max-width:820px;margin:auto;padding:14px}
+.header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+h1{font-size:24px;margin:0}
+.sub,.meta{font-size:13px;color:#6c7179}
+.stats{display:flex;gap:8px;flex-wrap:wrap}
+.pill,.card{background:#fff;border:1px solid #dadde1}
+.pill{border-radius:10px;padding:8px 10px}
+.card{border-radius:14px;padding:12px;margin:12px 0}
+.tabs{display:flex;gap:8px;overflow:auto;margin:14px 0}
+.tab,.btn{min-height:44px;border-radius:10px;border:1px solid #cfd3d8;background:#fff;color:#111;padding:8px 11px}
+.tab.active,.btn.primary{background:#111;color:#fff;border-color:#111}
+.panel{display:none}.panel.active{display:block}
+.toolbar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+input,select{min-height:44px;border:1px solid #cfd3d8;border-radius:10px;background:#fff;color:#111;padding:9px 10px;min-width:0}
+.row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 0;border-top:1px solid #eceef1}
+.row:first-child{border-top:0}
+.title{font-weight:650}
+.actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.setrow{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:8px;align-items:center;padding:9px 0;border-top:1px solid #eceef1}
+.setrow:first-child{border-top:0}
+.form{display:grid;grid-template-columns:minmax(0,1fr) 76px 76px 120px auto;gap:8px}
+.section{font-size:17px;font-weight:700;margin-bottom:8px}
+.empty{text-align:center;padding:14px;color:#777}
+.note{font-size:13px;color:#666;margin-top:8px}
+@media(max-width:650px){
+ .row{grid-template-columns:1fr}
+ .actions{justify-content:flex-start}
+ .setrow{grid-template-columns:26px minmax(0,1fr)}
+ .setrow .actions{grid-column:2}
+ .form{grid-template-columns:minmax(0,1fr) 68px 68px}
+ .form select{grid-column:1/3}
+ .form .add{grid-column:3}
+}
+@media(prefers-color-scheme:dark){
+ body{background:#111214;color:#f5f5f7}
+ .pill,.card,.tab,.btn,input,select{background:#1d1f22;color:#f5f5f7;border-color:#35383e}
+ .tab.active,.btn.primary{background:#f5f5f7;color:#111;border-color:#f5f5f7}
+ .sub,.meta,.note{color:#a8adb5}
+ .row,.setrow{border-color:#2d3035}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <div><h1>Set List</h1><div class="sub">PWA prototype</div></div>
+    <div class="stats">
+      <div class="pill">Music <strong id="music">0:00</strong></div>
+      <div class="pill">Total <strong id="total">0:00</strong></div>
+      <div class="pill"><strong id="count">0</strong> songs</div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="rep">Repertoire</button>
+    <button class="tab" data-tab="set">Current Set</button>
+    <button class="tab" data-tab="saved">Saved Sets</button>
+  </div>
+
+  <section id="panel-rep" class="panel active">
+    <div class="card">
+      <div class="toolbar">
+        <input id="search" type="search" placeholder="Поиск песни…">
+        <select id="filter">
+          <option value="All">All</option>
+          <option value="MessAge">MessAge</option>
+          <option value="Браво">Браво</option>
+        </select>
+      </div>
+      <div id="rep"></div>
+    </div>
+
+    <div class="card">
+      <div class="section">Add song</div>
+      <form id="addForm" class="form">
+        <input id="newTitle" type="text" placeholder="Название" required>
+        <input id="newMin" type="number" min="0" max="99" inputmode="numeric" placeholder="мин" required>
+        <input id="newSec" type="number" min="0" max="59" inputmode="numeric" placeholder="сек" required>
+        <select id="newProject"><option>Браво</option><option>MessAge</option></select>
+        <button class="btn primary add" type="submit">Add</button>
+      </form>
+      <div class="note">Время вводится двумя полями: минуты и секунды.</div>
+    </div>
+  </section>
+
+  <section id="panel-set" class="panel">
+    <div class="card"><div class="section">Main Set</div><div id="main"></div></div>
+    <div class="card"><div class="section">Encore</div><div id="encore"></div></div>
+    <div class="card">
+      <div class="section">Save current set</div>
+      <div class="toolbar">
+        <input id="setName" type="text" placeholder="Название сета">
+        <button id="saveSet" class="btn primary" type="button">Save</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="panel-saved" class="panel">
+    <div class="card"><div class="section">Saved Sets</div><div id="saved"></div></div>
+  </section>
+</div>
+
+<script>
+const starter=[
+["When Your Love Is In Town",4,38],["I've Got To Know",4,55],["Tears",4,13],
+["Troubles",4,2],["Take Me Up",4,24],["Middle Of The Road",3,42],
+["Partners In Pain",4,24],["Traveller In Time",3,5],["All You Want",4,16],
+["The Cult Of New Moon",3,35],["Lust",3,36],["When It's Over",3,59]
+];
+const fmt=s=>{s=Math.max(0,Math.round(Number(s)||0));const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),x=s%60;return h?`${h}:${String(m).padStart(2,"0")}:${String(x).padStart(2,"0")}`:`${m}:${String(x).padStart(2,"0")}`};
+const clone=x=>JSON.parse(JSON.stringify(x));
+const $=id=>document.getElementById(id);
+
+let songs=JSON.parse(localStorage.getItem("setlist_songs")||"null") ||
+  starter.map((x,i)=>({id:"m"+i,title:x[0],duration:x[1]*60+x[2],project:"MessAge"}));
+let main=JSON.parse(localStorage.getItem("setlist_main")||"[]");
+let encore=JSON.parse(localStorage.getItem("setlist_encore")||"[]");
+let saved=JSON.parse(localStorage.getItem("setlist_saved")||"[]");
+
+function persist(){
+ localStorage.setItem("setlist_songs",JSON.stringify(songs));
+ localStorage.setItem("setlist_main",JSON.stringify(main));
+ localStorage.setItem("setlist_encore",JSON.stringify(encore));
+ localStorage.setItem("setlist_saved",JSON.stringify(saved));
+}
+const byId=id=>songs.find(s=>s.id===id);
+const used=id=>main.some(x=>x.id===id)||encore.some(x=>x.id===id);
+
+function summary(){
+ const all=[...main,...encore];
+ const music=all.reduce((n,x)=>n+(byId(x.id)?.duration||0),0);
+ const pauses=all.reduce((n,x)=>n+(x.pause||0),0);
+ $("music").textContent=fmt(music);
+ $("total").textContent=fmt(music+pauses);
+ $("count").textContent=all.length;
+}
+function addTo(id,target){
+ if(used(id))return;
+ (target==="encore"?encore:main).push({id,pause:0});
+ persist(); renderAll();
+}
+function move(arr,i,d){
+ const j=i+d;if(j<0||j>=arr.length)return;
+ [arr[i],arr[j]]=[arr[j],arr[i]];
+ persist(); renderAll();
+}
+function renderRep(){
+ const q=$("search").value.trim().toLowerCase(), f=$("filter").value, host=$("rep");
+ host.innerHTML="";
+ const list=songs.filter(s=>(f==="All"||s.project===f)&&s.title.toLowerCase().includes(q));
+ if(!list.length){host.innerHTML='<div class="empty">Ничего не найдено</div>';return}
+ list.forEach(s=>{
+   const row=document.createElement("div"); row.className="row";
+   row.innerHTML='<div><div class="title"></div><div class="meta"></div></div><div class="actions"><button class="btn mainAdd" type="button">+ Main</button><button class="btn encAdd" type="button">+ Encore</button><button class="btn up" type="button">↑</button><button class="btn down" type="button">↓</button></div>';
+   row.querySelector(".title").textContent=s.title;
+   row.querySelector(".meta").textContent=`${s.project} · ${fmt(s.duration)}${used(s.id)?" · in set":""}`;
+   row.querySelector(".mainAdd").disabled=used(s.id);
+   row.querySelector(".encAdd").disabled=used(s.id);
+   row.querySelector(".mainAdd").onclick=()=>addTo(s.id,"main");
+   row.querySelector(".encAdd").onclick=()=>addTo(s.id,"encore");
+   row.querySelector(".up").onclick=()=>{const i=songs.indexOf(s);if(i>0){[songs[i-1],songs[i]]=[songs[i],songs[i-1]];persist();renderRep()}};
+   row.querySelector(".down").onclick=()=>{const i=songs.indexOf(s);if(i<songs.length-1){[songs[i],songs[i+1]]=[songs[i+1],songs[i]];persist();renderRep()}};
+   host.appendChild(row);
+ });
+}
+function renderSet(arr,id){
+ const host=$(id); host.innerHTML="";
+ if(!arr.length){host.innerHTML='<div class="empty">Пока пусто</div>';return}
+ arr.forEach((item,i)=>{
+   const s=byId(item.id); if(!s)return;
+   const row=document.createElement("div"); row.className="setrow";
+   row.innerHTML='<div></div><div><div class="title"></div><div class="meta"></div></div><div class="actions"><select class="pause"><option value="0">+0</option><option value="10">+0:10</option><option value="20">+0:20</option><option value="30">+0:30</option><option value="60">+1:00</option><option value="120">+2:00</option></select><button class="btn up" type="button">↑</button><button class="btn down" type="button">↓</button><button class="btn remove" type="button">Remove</button></div>';
+   row.children[0].textContent=i+1;
+   row.querySelector(".title").textContent=s.title;
+   row.querySelector(".meta").textContent=fmt(s.duration);
+   const pause=row.querySelector(".pause"); pause.value=String(item.pause||0);
+   pause.onchange=e=>{item.pause=Number(e.target.value);persist();summary()};
+   row.querySelector(".up").onclick=()=>move(arr,i,-1);
+   row.querySelector(".down").onclick=()=>move(arr,i,1);
+   row.querySelector(".remove").onclick=()=>{arr.splice(i,1);persist();renderAll()};
+   host.appendChild(row);
+ });
+}
+function renderSaved(){
+ const host=$("saved");host.innerHTML="";
+ if(!saved.length){host.innerHTML='<div class="empty">Сохранённых сетов пока нет</div>';return}
+ saved.forEach((x,i)=>{
+   const row=document.createElement("div"); row.className="row";
+   row.innerHTML='<div><div class="title"></div><div class="meta"></div></div><div class="actions"><button class="btn primary open" type="button">Open</button><button class="btn copy" type="button">Duplicate</button><button class="btn del" type="button">Delete</button></div>';
+   row.querySelector(".title").textContent=x.name;
+   row.querySelector(".meta").textContent=`${x.main.length+x.encore.length} songs`;
+   row.querySelector(".open").onclick=()=>{main=clone(x.main);encore=clone(x.encore);persist();switchTab("set");renderAll()};
+   row.querySelector(".copy").onclick=()=>{saved.push({name:x.name+" copy",main:clone(x.main),encore:clone(x.encore)});persist();renderSaved()};
+   row.querySelector(".del").onclick=()=>{saved.splice(i,1);persist();renderSaved()};
+   host.appendChild(row);
+ });
+}
+function switchTab(name){
+ document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.tab===name));
+ document.querySelectorAll(".panel").forEach(p=>p.classList.toggle("active",p.id==="panel-"+name));
+}
+function renderAll(){renderRep();renderSet(main,"main");renderSet(encore,"encore");renderSaved();summary()}
+
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
+$("search").oninput=renderRep; $("filter").onchange=renderRep;
+$("addForm").onsubmit=e=>{
+ e.preventDefault();
+ const title=$("newTitle").value.trim(), min=Number($("newMin").value), sec=Number($("newSec").value);
+ if(!title || !Number.isInteger(min) || !Number.isInteger(sec) || min<0 || sec<0 || sec>59)return;
+ songs.push({id:"s"+Date.now(),title,duration:min*60+sec,project:$("newProject").value});
+ $("newTitle").value="";$("newMin").value="";$("newSec").value="";
+ persist();renderRep();
+};
+$("saveSet").onclick=()=>{
+ const name=$("setName").value.trim(); if(!name)return;
+ const existing=saved.findIndex(x=>x.name.toLowerCase()===name.toLowerCase());
+ const obj={name,main:clone(main),encore:clone(encore)};
+ if(existing>=0)saved[existing]=obj; else saved.push(obj);
+ $("setName").value="";persist();renderSaved();
+};
+renderAll();
+
+if("serviceWorker" in navigator && location.protocol.startsWith("http")){
+ navigator.serviceWorker.register("service-worker.js").catch(()=>{});
+}
+</script>
+</body>
+</html>

@@ -1,9 +1,8 @@
-Set List PWA v1.17
+Set List PWA v1.18
 
-Saved Sets metadata update:
-- Under each saved set name, shows both song count and total duration.
-- Format: N songs · Total MM:SS
-- Saved Set name remains the tap target for opening.
-- Compact Duplicate and Delete buttons remain on the right.
-- All v1.16 functionality and data remain unchanged.
+Interface language update:
+- User-facing interface text is now English.
+- Search placeholder, instructions, form labels, confirmations, alerts, and empty-state messages translated.
+- Existing project/band names and song titles are data and are not translated.
+- All v1.17 functionality and stored data remain unchanged.
 - Caching remains disabled during development.

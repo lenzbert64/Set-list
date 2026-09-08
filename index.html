@@ -95,7 +95,7 @@ button, input, select, textarea, summary, .row, .setrow, .handle, .title, .tab {
 <body>
 <div class="wrap">
   <div class="header">
-    <div><h1>Set List</h1><div class="version">Version 1.17</div></div>
+    <div><h1>Set List</h1><div class="version">Version 1.18</div></div>
   </div>
 
   <div class="tabs">
@@ -107,7 +107,7 @@ button, input, select, textarea, summary, .row, .setrow, .handle, .title, .tab {
   <section id="panel-rep" class="panel active">
     <div class="card">
       <div class="toolbar">
-        <input id="search" type="search" placeholder="Поиск песни…">
+        <input id="search" type="search" placeholder="Search songs...">
         <select id="filter">
           <option value="All">All</option>
           <option value="MessAge">MessAge</option>
@@ -116,13 +116,13 @@ button, input, select, textarea, summary, .row, .setrow, .handle, .title, .tab {
       </div>
       <div class="stickyStats"><div class="statbar"><span id="repCount">0</span> songs · Total <span id="repTotal">0:00</span></div></div>
       <div id="rep"></div>
-      <div class="holdhint">Удерживайте название песни для редактирования.</div>
+      <div class="holdhint">Press and hold a song title to edit.</div>
     </div>
 
     <details class="card addCard">
       <summary>Add song</summary>
       <form id="addForm" class="form">
-        <input id="newTitle" type="text" placeholder="Название" required>
+        <input id="newTitle" type="text" placeholder="Title" required>
         <input id="newMin" type="number" min="0" max="99" inputmode="numeric" placeholder="мин" required>
         <input id="newSec" type="number" min="0" max="59" inputmode="numeric" placeholder="сек" required>
         <select id="newProject"><option>Браво</option><option>MessAge</option></select>
@@ -131,7 +131,7 @@ button, input, select, textarea, summary, .row, .setrow, .handle, .title, .tab {
     </details>
 
     <details class="card addCard">
-      <summary>Добавить списком</summary>
+      <summary>Add songs in bulk</summary>
       <textarea id="bulkText" placeholder="Этот город — 3:42&#10;Любите, девушки — 4:05&#10;Вася — 3:18"></textarea>
       <div class="bulkActions">
         <select id="bulkProject"><option>Браво</option><option>MessAge</option></select>
@@ -152,7 +152,7 @@ button, input, select, textarea, summary, .row, .setrow, .handle, .title, .tab {
     <div class="card">
       <div class="section">Save current set</div>
       <div class="savebar">
-        <input id="setName" type="text" placeholder="Название сета">
+        <input id="setName" type="text" placeholder="Set name">
         <button id="saveSet" class="btn primary" type="button">Save</button>
       </div>
     </div>
@@ -167,7 +167,7 @@ button, input, select, textarea, summary, .row, .setrow, .handle, .title, .tab {
         <button id="importBackup" class="btn" type="button">Import Backup</button>
         <input id="backupFile" type="file" accept=".json,application/json" style="display:none">
       </div>
-      <div class="note">Backup содержит репертуар, Current Set и все Saved Sets.</div>
+      <div class="note">Backup includes Repertoire, Current Set, and all Saved Sets.</div>
     </div>
   </section>
 </div>
@@ -365,7 +365,7 @@ function renderSet(){
 }
 function renderSaved(){
  const host=$("saved");host.innerHTML="";
- if(!saved.length){host.innerHTML='<div class="empty">Сохранённых сетов пока нет</div>';return}
+ if(!saved.length){host.innerHTML='<div class="empty">No saved sets yet</div>';return}
  saved.forEach((x,i)=>{
   const row=document.createElement("div");row.className="savedrow";
   row.innerHTML='<div class="savedopen" role="button" tabindex="0"><div class="title"></div><div class="meta"></div></div><button class="btn savedmini copy">Duplicate</button><button class="btn savedmini del">Delete</button>';
@@ -377,7 +377,7 @@ function renderSaved(){
   open.onclick=openSet;
   open.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openSet()}};
   row.querySelector(".copy").onclick=()=>{saved.push({name:x.name+" copy",main:clone(x.main)});persist();renderSaved()};
-  row.querySelector(".del").onclick=()=>{if(confirm("Удалить сохранённый сет?")){saved.splice(i,1);persist();renderSaved()}};
+  row.querySelector(".del").onclick=()=>{if(confirm("Delete this saved set?")){saved.splice(i,1);persist();renderSaved()}};
   host.appendChild(row);
  });
 }
@@ -424,7 +424,7 @@ $("undoSet").onclick=()=>{
 };
 $("clearSet").onclick=()=>{
  if(!main.length)return;
- if(!confirm("Очистить текущий сет?"))return;
+ if(!confirm("Clear the current set?"))return;
  rememberMainForUndo();
  main=[];persist();renderAll();
 };

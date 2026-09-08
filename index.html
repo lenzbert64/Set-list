@@ -73,12 +73,21 @@ textarea{width:100%;min-height:120px;resize:vertical}
  .stickyStats{background:rgba(17,18,20,.94)}
  .toggle.inset{background:#34c759;color:#fff;border-color:#34c759}
 }
+
+/* iOS/PWA: prevent accidental double-tap zoom on controls; pinch zoom remains available. */
+button, input, select, textarea, summary, .row, .setrow, .handle, .title, .tab {
+  touch-action: manipulation;
+}
+.handle {
+  touch-action: none;
+}
+
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="header">
-    <div><h1>Set List</h1><div class="version">Version 1.14</div></div>
+    <div><h1>Set List</h1><div class="version">Version 1.15</div></div>
   </div>
 
   <div class="tabs">

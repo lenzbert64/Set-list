@@ -1,8 +1,8 @@
-Set List PWA v1.14
+Set List PWA v1.15
 
-Visual change only:
-- Undo last change and Clear current set are now two matching full-width rows/buttons.
-- Undo is directly above Clear.
-- Undo behavior is unchanged from v1.13.
-- All other v1.13 functionality is unchanged.
+Change from v1.14:
+- Prevents accidental iPhone/iPad Safari double-tap zoom on app controls.
+- Normal pinch-to-zoom remains available.
+- Drag handles keep their touch behavior.
+- All v1.14 functionality and data remain unchanged.
 - Caching remains disabled during development.

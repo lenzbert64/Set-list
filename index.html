@@ -35,6 +35,8 @@ input,select{min-height:44px;border:1px solid #cfd3d8;border-radius:10px;backgro
 .section{font-size:17px;font-weight:700;margin-bottom:8px}
 .empty{text-align:center;padding:14px;color:#777}
 .note{font-size:13px;color:#666;margin-top:8px}
+.bulk{display:grid;grid-template-columns:minmax(0,1fr) 120px auto;gap:8px;align-items:start}
+textarea{font:inherit;min-height:150px;border:1px solid #cfd3d8;border-radius:10px;background:#fff;color:#111;padding:10px;resize:vertical;min-width:0}
 @media(max-width:650px){
  .row{grid-template-columns:1fr}
  .actions{justify-content:flex-start}
@@ -43,10 +45,12 @@ input,select{min-height:44px;border:1px solid #cfd3d8;border-radius:10px;backgro
  .form{grid-template-columns:minmax(0,1fr) 68px 68px}
  .form select{grid-column:1/3}
  .form .add{grid-column:3}
+ .bulk{grid-template-columns:1fr}
+ .bulk select,.bulk button{width:100%}
 }
 @media(prefers-color-scheme:dark){
  body{background:#111214;color:#f5f5f7}
- .pill,.card,.tab,.btn,input,select{background:#1d1f22;color:#f5f5f7;border-color:#35383e}
+ .pill,.card,.tab,.btn,input,select,textarea{background:#1d1f22;color:#f5f5f7;border-color:#35383e}
  .tab.active,.btn.primary{background:#f5f5f7;color:#111;border-color:#f5f5f7}
  .sub,.meta,.note{color:#a8adb5}
  .row,.setrow{border-color:#2d3035}
@@ -93,6 +97,16 @@ input,select{min-height:44px;border:1px solid #cfd3d8;border-radius:10px;backgro
         <button class="btn primary add" type="submit">Add</button>
       </form>
       <div class="note">Время вводится двумя полями: минуты и секунды.</div>
+    </div>
+    <div class="card">
+      <div class="section">Добавить список</div>
+      <div class="bulk">
+        <textarea id="bulkText" placeholder="Этот город — 3:42&#10;Любите, девушки — 4:05&#10;Вася — 3:18"></textarea>
+        <select id="bulkProject"><option>Браво</option><option>MessAge</option></select>
+        <button id="bulkAdd" class="btn primary" type="button">Добавить все</button>
+      </div>
+      <div class="note">Одна песня на строку. Формат: Название — 3:42. Подойдут также «Название - 3:42» и «Название 3:42».</div>
+      <div id="bulkResult" class="note"></div>
     </div>
   </section>
 
@@ -224,6 +238,7 @@ $("addForm").onsubmit=e=>{
  $("newTitle").value="";$("newMin").value="";$("newSec").value="";
  persist();renderRep();
 };
+\n$("bulkAdd").onclick=()=>{\n const text=$("bulkText").value.trim();\n if(!text){$("bulkResult").textContent="Вставьте список песен.";return}\n const project=$("bulkProject").value;\n const lines=text.split(/\\r?\\n/).map(x=>x.trim()).filter(Boolean);\n let added=0, skipped=[];\n lines.forEach((line,idx)=>{\n   const m=line.match(/^(.*?)\\s*(?:[—–-]\\s*)?(\\d{1,2}):([0-5]\\d)\\s*$/);\n   if(!m){skipped.push(idx+1);return}\n   const title=m[1].trim().replace(/[—–-]\\s*$/," ").trim();\n   const min=Number(m[2]), sec=Number(m[3]);\n   if(!title){skipped.push(idx+1);return}\n   songs.push({id:"b"+Date.now()+"_"+idx+"_"+Math.random().toString(36).slice(2,7),title,duration:min*60+sec,project});\n   added++;\n });\n if(added){persist();renderRep();$("bulkText").value=""}\n $("bulkResult").textContent=skipped.length ? `Добавлено: ${added}. Не распознаны строки: ${skipped.join(", ")}.` : `Добавлено песен: ${added}.`;\n};\n
 $("saveSet").onclick=()=>{
  const name=$("setName").value.trim(); if(!name)return;
  const existing=saved.findIndex(x=>x.name.toLowerCase()===name.toLowerCase());

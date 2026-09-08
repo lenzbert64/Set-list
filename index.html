@@ -75,7 +75,7 @@ textarea{width:100%;min-height:120px;resize:vertical}
 <body>
 <div class="wrap">
   <div class="header">
-    <div><h1>Set List</h1><div class="version">Version 1.11</div></div>
+    <div><h1>Set List</h1><div class="version">Version 1.12</div></div>
   </div>
 
   <div class="tabs">
@@ -94,6 +94,7 @@ textarea{width:100%;min-height:120px;resize:vertical}
           <option value="Браво">Браво</option>
         </select>
       </div>
+      <div class="stickyStats"><div class="statbar"><span id="repCount">0</span> songs · Total <span id="repTotal">0:00</span></div></div>
       <div id="rep"></div>
       <div class="holdhint">Удерживайте название песни для редактирования.</div>
     </div>
@@ -188,6 +189,8 @@ function summary(){
  const total=main.reduce((n,x)=>n+(byId(x.id)?.duration||0),0);
  $("total").textContent=fmt(total);
  $("count").textContent=main.length;
+ $("repTotal").textContent=fmt(total);
+ $("repCount").textContent=main.length;
 }
 function editSong(id){
  const s=byId(id); if(!s)return;

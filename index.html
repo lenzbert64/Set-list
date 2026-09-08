@@ -114,6 +114,10 @@ textarea{width:100%;min-height:150px;resize:vertical}
     <div class="card"><div class="section">Main Set</div><div id="main"></div></div>
     <div class="card"><div class="section">Encore</div><div id="encore"></div></div>
     <div class="card">
+      <button id="clearSet" class="btn" type="button">Clear current set</button>
+      <div class="note">Очищает Main Set и Encore. Сохранённые сет-листы не удаляются.</div>
+    </div>
+    <div class="card">
       <div class="section">Save current set</div>
       <div class="toolbar">
         <input id="setName" type="text" placeholder="Название сета">
@@ -180,9 +184,13 @@ function renderRep(){
    const row=document.createElement("div"); row.className="row";
    row.innerHTML='<div><div class="title"></div><div class="meta"></div></div><div class="actions"><button class="btn mainAdd" type="button">+ Main</button><button class="btn encAdd" type="button">+ Encore</button><button class="btn up" type="button">↑</button><button class="btn down" type="button">↓</button></div>';
    row.querySelector(".title").textContent=s.title;
-   row.querySelector(".meta").textContent=`${s.project} · ${fmt(s.duration)}${used(s.id)?" · in set":""}`;
+   const inMain=main.some(x=>x.id===s.id), inEncore=encore.some(x=>x.id===s.id);
+   const where=inMain?"✓ Main Set":inEncore?"✓ Encore":"";
+   row.querySelector(".meta").textContent=`${s.project} · ${fmt(s.duration)}${where?" · "+where:""}`;
    row.querySelector(".mainAdd").disabled=used(s.id);
    row.querySelector(".encAdd").disabled=used(s.id);
+   if(inMain){row.querySelector(".mainAdd").textContent="✓ In Main";row.querySelector(".encAdd").textContent="Encore"}
+   else if(inEncore){row.querySelector(".mainAdd").textContent="Main";row.querySelector(".encAdd").textContent="✓ In Encore"}
    row.querySelector(".mainAdd").onclick=()=>addTo(s.id,"main");
    row.querySelector(".encAdd").onclick=()=>addTo(s.id,"encore");
    row.querySelector(".up").onclick=()=>{const i=songs.indexOf(s);if(i>0){[songs[i-1],songs[i]]=[songs[i],songs[i-1]];persist();renderRep()}};
@@ -268,6 +276,13 @@ $("bulkAdd").onclick=()=>{
  $("bulkResult").textContent=skipped.length
    ? "Добавлено: "+added+". Не распознаны строки: "+skipped.join(", ")+"."
    : "Добавлено песен: "+added+".";
+};
+
+$("clearSet").onclick=()=>{
+ if(!main.length && !encore.length)return;
+ if(!confirm("Очистить текущий сет? Main Set и Encore будут очищены."))return;
+ main=[]; encore=[];
+ persist(); renderAll();
 };
 
 $("saveSet").onclick=()=>{

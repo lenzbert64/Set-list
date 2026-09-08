@@ -11,60 +11,70 @@
 *{box-sizing:border-box}
 body{margin:0;background:#f4f4f6;color:#111}
 button,input,select,textarea{font:inherit}
-.wrap{max-width:820px;margin:auto;padding:14px}
-.header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
-h1{font-size:24px;margin:0}
-.sub,.meta{font-size:13px;color:#6c7179}
-.stats{display:flex;gap:8px;flex-wrap:wrap}
-.pill,.card{background:#fff;border:1px solid #dadde1}
-.pill{border-radius:10px;padding:8px 10px}
-.card{border-radius:14px;padding:12px;margin:12px 0}
-.tabs{display:flex;gap:8px;overflow:auto;margin:14px 0}
-.tab,.btn{min-height:44px;border-radius:10px;border:1px solid #cfd3d8;background:#fff;color:#111;padding:8px 11px}
+.wrap{max-width:820px;margin:auto;padding:12px}
+.header{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+h1{font-size:23px;margin:0}
+.version{font-size:11px;color:#888;margin-top:1px}
+.card{background:#fff;border:1px solid #dadde1;border-radius:12px;padding:9px;margin:9px 0}
+.tabs{display:flex;gap:6px;overflow:auto;margin:10px 0}
+.tab,.btn{min-height:38px;border-radius:9px;border:1px solid #cfd3d8;background:#fff;color:#111;padding:6px 10px}
 .tab.active,.btn.primary{background:#111;color:#fff;border-color:#111}
 .panel{display:none}.panel.active{display:block}
-.toolbar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
-input,select,textarea{min-height:44px;border:1px solid #cfd3d8;border-radius:10px;background:#fff;color:#111;padding:9px 10px;min-width:0}
-textarea{width:100%;min-height:150px;resize:vertical}
-.bulkActions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
-.bulkActions select{min-width:120px}
-.row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 0;border-top:1px solid #eceef1}
+.toolbar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px}
+input,select,textarea{min-height:38px;border:1px solid #cfd3d8;border-radius:9px;background:#fff;color:#111;padding:7px 9px;min-width:0}
+textarea{width:100%;min-height:120px;resize:vertical}
+.row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:7px 0;border-top:1px solid #eceef1}
 .row:first-child{border-top:0}
-.title{font-weight:650}
-.actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
-.setrow{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:8px;align-items:center;padding:9px 0;border-top:1px solid #eceef1}
+.songline{display:flex;align-items:baseline;gap:8px;min-width:0}
+.title{font-weight:650;line-height:1.18}
+.duration{font-size:13px;color:#6c7179;white-space:nowrap}
+.actions{display:flex;gap:5px;align-items:center;justify-content:flex-end}
+.toggle{width:38px;min-width:38px;padding:4px;font-size:18px;font-weight:700}
+.toggle.inset{background:#34c759;color:#fff;border-color:#34c759}
+.section{font-size:16px;font-weight:700;margin-bottom:6px}
+.note,.meta{font-size:12px;color:#6c7179}
+.empty{text-align:center;padding:12px;color:#777}
+.addCard summary{font-weight:650;cursor:pointer;list-style:none;padding:2px 0}
+.addCard summary::-webkit-details-marker{display:none}
+.addCard summary::after{content:"＋";float:right;font-size:18px;font-weight:400}
+.addCard[open] summary::after{content:"−"}
+.form{display:grid;grid-template-columns:minmax(0,1fr) 60px 60px 105px auto;gap:6px;margin-top:8px}
+.bulkActions{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px}
+.bulkActions select{min-width:110px}
+.stickyStats{position:sticky;top:0;z-index:20;background:rgba(244,244,246,.94);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:6px 0}
+.statbar{background:#fff;border:1px solid #dadde1;border-radius:10px;padding:8px 10px;text-align:center;font-weight:650}
+.setrow{display:grid;grid-template-columns:24px minmax(0,1fr) 32px;gap:7px;align-items:center;padding:8px 0;border-top:1px solid #eceef1;touch-action:pan-y}
 .setrow:first-child{border-top:0}
-.form{display:grid;grid-template-columns:minmax(0,1fr) 76px 76px 120px auto;gap:8px}
-.section{font-size:17px;font-weight:700;margin-bottom:8px}
-.empty{text-align:center;padding:14px;color:#777}
-.note{font-size:13px;color:#666;margin-top:8px}
+.num{font-size:13px;color:#777;text-align:center}
+.handle{font-size:22px;color:#777;text-align:center;cursor:grab;user-select:none;-webkit-user-select:none;touch-action:none}
+.setrow.dragging{opacity:.45}
+.setrow.dragover{border-top:2px solid #777}
+.savebar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px}
+.backup{margin-top:28px}
+.holdhint{font-size:11px;color:#8a8f96;margin-top:4px}
 @media(max-width:650px){
- .row{grid-template-columns:1fr}
- .actions{justify-content:flex-start}
- .setrow{grid-template-columns:26px minmax(0,1fr)}
- .setrow .actions{grid-column:2}
- .form{grid-template-columns:minmax(0,1fr) 68px 68px}
+ .wrap{padding:10px}
+ .row{grid-template-columns:minmax(0,1fr) 38px}
+ .form{grid-template-columns:minmax(0,1fr) 56px 56px}
  .form select{grid-column:1/3}
  .form .add{grid-column:3}
+ .tabs .tab{white-space:nowrap}
 }
 @media(prefers-color-scheme:dark){
  body{background:#111214;color:#f5f5f7}
- .pill,.card,.tab,.btn,input,select,textarea{background:#1d1f22;color:#f5f5f7;border-color:#35383e}
+ .card,.tab,.btn,input,select,textarea,.statbar{background:#1d1f22;color:#f5f5f7;border-color:#35383e}
  .tab.active,.btn.primary{background:#f5f5f7;color:#111;border-color:#f5f5f7}
- .sub,.meta,.note{color:#a8adb5}
+ .duration,.note,.meta,.holdhint,.num,.handle,.version{color:#a8adb5}
  .row,.setrow{border-color:#2d3035}
+ .stickyStats{background:rgba(17,18,20,.94)}
+ .toggle.inset{background:#34c759;color:#fff;border-color:#34c759}
 }
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="header">
-    <div><h1>Set List</h1><div style="font-size:12px;color:#888;margin-top:-8px;margin-bottom:10px">Version 1.8</div><div class="sub">PWA prototype</div></div>
-    <div class="stats">
-      <div class="pill">Music <strong id="music">0:00</strong></div>
-      <div class="pill">Total <strong id="total">0:00</strong></div>
-      <div class="pill"><strong id="count">0</strong> songs</div>
-    </div>
+    <div><h1>Set List</h1><div class="version">Version 1.9</div></div>
   </div>
 
   <div class="tabs">
@@ -84,10 +94,11 @@ textarea{width:100%;min-height:150px;resize:vertical}
         </select>
       </div>
       <div id="rep"></div>
+      <div class="holdhint">Удерживайте название песни для редактирования.</div>
     </div>
 
-    <div class="card">
-      <div class="section">Add song</div>
+    <details class="card addCard">
+      <summary>Add song</summary>
       <form id="addForm" class="form">
         <input id="newTitle" type="text" placeholder="Название" required>
         <input id="newMin" type="number" min="0" max="99" inputmode="numeric" placeholder="мин" required>
@@ -95,31 +106,29 @@ textarea{width:100%;min-height:150px;resize:vertical}
         <select id="newProject"><option>Браво</option><option>MessAge</option></select>
         <button class="btn primary add" type="submit">Add</button>
       </form>
-      <div class="note">Время вводится двумя полями: минуты и секунды.</div>
-    </div>
+    </details>
 
-    <div class="card">
-      <div class="section">Добавить списком</div>
+    <details class="card addCard">
+      <summary>Добавить списком</summary>
       <textarea id="bulkText" placeholder="Этот город — 3:42&#10;Любите, девушки — 4:05&#10;Вася — 3:18"></textarea>
       <div class="bulkActions">
         <select id="bulkProject"><option>Браво</option><option>MessAge</option></select>
         <button id="bulkAdd" class="btn primary" type="button">Добавить все</button>
       </div>
-      <div class="note">Одна песня на строку. Формат: Название — 3:42. Также понимает «Название - 3:42» и «Название 3:42».</div>
+      <div class="note">Одна песня на строку: Название — 3:42.</div>
       <div id="bulkResult" class="note"></div>
-    </div>
+    </details>
   </section>
 
   <section id="panel-set" class="panel">
-    <div class="card"><div class="section">Main Set</div><div id="main"></div></div>
-    <div class="card"><div class="section">Encore</div><div id="encore"></div></div>
+    <div class="stickyStats"><div class="statbar"><span id="count">0</span> songs · Total <span id="total">0:00</span></div></div>
+    <div class="card"><div id="main"></div></div>
     <div class="card">
       <button id="clearSet" class="btn" type="button">Clear current set</button>
-      <div class="note">Очищает Main Set и Encore. Сохранённые сет-листы не удаляются.</div>
     </div>
     <div class="card">
       <div class="section">Save current set</div>
-      <div class="toolbar">
+      <div class="savebar">
         <input id="setName" type="text" placeholder="Название сета">
         <button id="saveSet" class="btn primary" type="button">Save</button>
       </div>
@@ -127,16 +136,16 @@ textarea{width:100%;min-height:150px;resize:vertical}
   </section>
 
   <section id="panel-saved" class="panel">
-    <div class="card">
+    <div class="card"><div class="section">Saved Sets</div><div id="saved"></div></div>
+    <div class="card backup">
       <div class="section">Backup / Restore</div>
       <div class="actions">
         <button id="exportBackup" class="btn primary" type="button">Export Backup</button>
         <button id="importBackup" class="btn" type="button">Import Backup</button>
         <input id="backupFile" type="file" accept=".json,application/json" style="display:none">
       </div>
-      <div class="note">Backup содержит репертуар, ручной порядок, Current Set и все Saved Sets.</div>
+      <div class="note">Backup содержит репертуар, Current Set и все Saved Sets.</div>
     </div>
-    <div class="card"><div class="section">Saved Sets</div><div id="saved"></div></div>
   </section>
 </div>
 
@@ -152,35 +161,40 @@ const clone=x=>JSON.parse(JSON.stringify(x));
 const $=id=>document.getElementById(id);
 
 let songs=JSON.parse(localStorage.getItem("setlist_songs")||"null") ||
-  starter.map((x,i)=>({id:"m"+i,title:x[0],duration:x[1]*60+x[2],project:"MessAge"}));
+ starter.map((x,i)=>({id:"m"+i,title:x[0],duration:x[1]*60+x[2],project:"MessAge"}));
 let main=JSON.parse(localStorage.getItem("setlist_main")||"[]");
-let encore=JSON.parse(localStorage.getItem("setlist_encore")||"[]");
-let saved=JSON.parse(localStorage.getItem("setlist_saved")||"[]");
+let oldEncore=JSON.parse(localStorage.getItem("setlist_encore")||"[]");
+if(oldEncore.length){
+ const ids=new Set(main.map(x=>x.id));
+ oldEncore.forEach(x=>{if(!ids.has(x.id)){main.push({id:x.id});ids.add(x.id)}});
+ oldEncore=[];
+}
+let saved=JSON.parse(localStorage.getItem("setlist_saved")||"[]").map(x=>({
+ name:x.name,
+ main:[...(x.main||[]),...(x.encore||[])].filter((v,i,a)=>a.findIndex(y=>y.id===v.id)===i)
+}));
 
 function persist(){
  localStorage.setItem("setlist_songs",JSON.stringify(songs));
- localStorage.setItem("setlist_main",JSON.stringify(main));
- localStorage.setItem("setlist_encore",JSON.stringify(encore));
- localStorage.setItem("setlist_saved",JSON.stringify(saved));
+ localStorage.setItem("setlist_main",JSON.stringify(main.map(x=>({id:x.id}))));
+ localStorage.setItem("setlist_encore","[]");
+ localStorage.setItem("setlist_saved",JSON.stringify(saved.map(x=>({name:x.name,main:x.main,encore:[]}))));
 }
 const byId=id=>songs.find(s=>s.id===id);
-const used=id=>main.some(x=>x.id===id)||encore.some(x=>x.id===id);
+const inSet=id=>main.some(x=>x.id===id);
 
 function summary(){
- const all=[...main,...encore];
- const music=all.reduce((n,x)=>n+(byId(x.id)?.duration||0),0);
- const pauses=all.reduce((n,x)=>n+(x.pause||0),0);
- $("music").textContent=fmt(music);
- $("total").textContent=fmt(music+pauses);
- $("count").textContent=all.length;
+ const total=main.reduce((n,x)=>n+(byId(x.id)?.duration||0),0);
+ $("total").textContent=fmt(total);
+ $("count").textContent=main.length;
 }
 function editSong(id){
- const s=songs.find(x=>x.id===id); if(!s)return;
+ const s=byId(id); if(!s)return;
  const title=prompt("Название песни:",s.title); if(title===null)return;
  const cleanTitle=title.trim(); if(!cleanTitle){alert("Название не может быть пустым.");return}
  const minText=prompt("Минуты:",String(Math.floor(s.duration/60))); if(minText===null)return;
  const secText=prompt("Секунды (0–59):",String(s.duration%60)); if(secText===null)return;
- const min=Number(minText), sec=Number(secText);
+ const min=Number(minText),sec=Number(secText);
  if(!Number.isInteger(min)||min<0||!Number.isInteger(sec)||sec<0||sec>59){alert("Неверно указано время.");return}
  const projectText=prompt("Проект: Браво или MessAge",s.project); if(projectText===null)return;
  const normalized=projectText.trim().toLowerCase();
@@ -188,88 +202,111 @@ function editSong(id){
  if(normalized==="браво")project="Браво";
  else if(normalized==="message")project="MessAge";
  else{alert("Проект должен быть «Браво» или «MessAge».");return}
- s.title=cleanTitle; s.duration=min*60+sec; s.project=project;
- persist(); renderAll();
+ s.title=cleanTitle;s.duration=min*60+sec;s.project=project;
+ persist();renderAll();
 }
-
-function addTo(id,target){
- if(used(id))return;
- (target==="encore"?encore:main).push({id,pause:0});
- persist(); renderAll();
+function toggleSet(id){
+ const i=main.findIndex(x=>x.id===id);
+ if(i>=0)main.splice(i,1); else main.push({id});
+ persist();renderAll();
 }
-function move(arr,i,d){
- const j=i+d;if(j<0||j>=arr.length)return;
- [arr[i],arr[j]]=[arr[j],arr[i]];
- persist(); renderAll();
+function bindLongPress(el,id){
+ let timer=null,moved=false;
+ const start=()=>{moved=false;timer=setTimeout(()=>{timer=null;if(!moved)editSong(id)},600)};
+ const cancel=()=>{if(timer){clearTimeout(timer);timer=null}};
+ el.addEventListener("touchstart",start,{passive:true});
+ el.addEventListener("touchmove",()=>{moved=true;cancel()},{passive:true});
+ el.addEventListener("touchend",cancel,{passive:true});
+ el.addEventListener("touchcancel",cancel,{passive:true});
+ el.addEventListener("contextmenu",e=>{e.preventDefault();editSong(id)});
 }
 function renderRep(){
- const q=$("search").value.trim().toLowerCase(), f=$("filter").value, host=$("rep");
+ const q=$("search").value.trim().toLowerCase(),f=$("filter").value,host=$("rep");
  host.innerHTML="";
  const list=songs.filter(s=>(f==="All"||s.project===f)&&s.title.toLowerCase().includes(q));
  if(!list.length){host.innerHTML='<div class="empty">Ничего не найдено</div>';return}
  list.forEach(s=>{
-   const row=document.createElement("div"); row.className="row";
-   row.innerHTML='<div><div class="title"></div><div class="meta"></div></div><div class="actions"><button class="btn mainAdd" type="button">+ Main</button><button class="btn encAdd" type="button">+ Encore</button><button class="btn editSong" type="button">Edit</button><button class="btn up" type="button">↑</button><button class="btn down" type="button">↓</button></div>';
-   row.querySelector(".title").textContent=s.title;
-   const inMain=main.some(x=>x.id===s.id), inEncore=encore.some(x=>x.id===s.id);
-   const where=inMain?"✓ Main Set":inEncore?"✓ Encore":"";
-   row.querySelector(".meta").textContent=`${s.project} · ${fmt(s.duration)}${where?" · "+where:""}`;
-   row.querySelector(".mainAdd").disabled=used(s.id);
-   row.querySelector(".encAdd").disabled=used(s.id);
-   if(inMain){row.querySelector(".mainAdd").textContent="✓ In Main";row.querySelector(".encAdd").textContent="Encore"}
-   else if(inEncore){row.querySelector(".mainAdd").textContent="Main";row.querySelector(".encAdd").textContent="✓ In Encore"}
-   row.querySelector(".mainAdd").onclick=()=>addTo(s.id,"main");
-   row.querySelector(".encAdd").onclick=()=>addTo(s.id,"encore");
-   row.querySelector(".editSong").onclick=()=>editSong(s.id);
-   row.querySelector(".up").onclick=()=>{const i=songs.indexOf(s);if(i>0){[songs[i-1],songs[i]]=[songs[i],songs[i-1]];persist();renderRep()}};
-   row.querySelector(".down").onclick=()=>{const i=songs.indexOf(s);if(i<songs.length-1){[songs[i],songs[i+1]]=[songs[i+1],songs[i]];persist();renderRep()}};
-   host.appendChild(row);
+  const row=document.createElement("div");row.className="row";
+  row.innerHTML='<div class="songline"><div class="title"></div><div class="duration"></div></div><button class="btn toggle" type="button"></button>';
+  const title=row.querySelector(".title"),btn=row.querySelector(".toggle");
+  title.textContent=s.title;row.querySelector(".duration").textContent=fmt(s.duration);
+  const selected=inSet(s.id);
+  btn.textContent=selected?"✓":"+";
+  btn.classList.toggle("inset",selected);
+  btn.setAttribute("aria-label",selected?"Убрать из Current Set":"Добавить в Current Set");
+  btn.onclick=()=>toggleSet(s.id);
+  bindLongPress(title,s.id);
+  host.appendChild(row);
  });
 }
-function renderSet(arr,id){
- const host=$(id); host.innerHTML="";
- if(!arr.length){host.innerHTML='<div class="empty">Пока пусто</div>';return}
- arr.forEach((item,i)=>{
-   const s=byId(item.id); if(!s)return;
-   const row=document.createElement("div"); row.className="setrow";
-   row.innerHTML='<div></div><div><div class="title"></div><div class="meta"></div></div><div class="actions"><select class="pause"><option value="0">+0</option><option value="10">+0:10</option><option value="20">+0:20</option><option value="30">+0:30</option><option value="60">+1:00</option><option value="120">+2:00</option></select><button class="btn up" type="button">↑</button><button class="btn down" type="button">↓</button><button class="btn remove" type="button">Remove</button></div>';
-   row.children[0].textContent=i+1;
-   row.querySelector(".title").textContent=s.title;
-   row.querySelector(".meta").textContent=fmt(s.duration);
-   const pause=row.querySelector(".pause"); pause.value=String(item.pause||0);
-   pause.onchange=e=>{item.pause=Number(e.target.value);persist();summary()};
-   row.querySelector(".up").onclick=()=>move(arr,i,-1);
-   row.querySelector(".down").onclick=()=>move(arr,i,1);
-   row.querySelector(".remove").onclick=()=>{arr.splice(i,1);persist();renderAll()};
-   host.appendChild(row);
+let dragIndex=null;
+function renderSet(){
+ const host=$("main");host.innerHTML="";
+ if(!main.length){host.innerHTML='<div class="empty">Пока пусто</div>';return}
+ main.forEach((item,i)=>{
+  const s=byId(item.id);if(!s)return;
+  const row=document.createElement("div");row.className="setrow";row.dataset.index=i;
+  row.innerHTML='<div class="num"></div><div class="songline"><div class="title"></div><div class="duration"></div></div><div class="handle" draggable="true">≡</div>';
+  row.querySelector(".num").textContent=i+1;
+  row.querySelector(".title").textContent=s.title;
+  row.querySelector(".duration").textContent=fmt(s.duration);
+  const handle=row.querySelector(".handle");
+
+  handle.addEventListener("dragstart",e=>{dragIndex=i;row.classList.add("dragging");e.dataTransfer.effectAllowed="move"});
+  handle.addEventListener("dragend",()=>{dragIndex=null;row.classList.remove("dragging");document.querySelectorAll(".dragover").forEach(x=>x.classList.remove("dragover"))});
+  row.addEventListener("dragover",e=>{e.preventDefault();row.classList.add("dragover")});
+  row.addEventListener("dragleave",()=>row.classList.remove("dragover"));
+  row.addEventListener("drop",e=>{
+   e.preventDefault();row.classList.remove("dragover");
+   if(dragIndex===null||dragIndex===i)return;
+   const [moved]=main.splice(dragIndex,1);main.splice(i,0,moved);persist();renderAll();
+  });
+
+  let touchStartY=0,touchIndex=i,active=false;
+  handle.addEventListener("touchstart",e=>{active=true;touchStartY=e.touches[0].clientY;touchIndex=Number(row.dataset.index);row.classList.add("dragging")},{passive:false});
+  handle.addEventListener("touchmove",e=>{
+   if(!active)return;e.preventDefault();
+   const y=e.touches[0].clientY;
+   const rows=[...host.querySelectorAll(".setrow")];
+   let target=rows.findIndex(r=>{const b=r.getBoundingClientRect();return y>=b.top&&y<=b.bottom});
+   if(target<0)target=y<rows[0].getBoundingClientRect().top?0:rows.length-1;
+   if(target!==touchIndex){
+    const [moved]=main.splice(touchIndex,1);main.splice(target,0,moved);touchIndex=target;
+    persist();renderSet();summary();
+    const newRow=host.querySelectorAll(".setrow")[target];if(newRow)newRow.classList.add("dragging");
+   }
+  },{passive:false});
+  handle.addEventListener("touchend",()=>{active=false;renderAll()},{passive:true});
+  host.appendChild(row);
  });
 }
 function renderSaved(){
  const host=$("saved");host.innerHTML="";
  if(!saved.length){host.innerHTML='<div class="empty">Сохранённых сетов пока нет</div>';return}
  saved.forEach((x,i)=>{
-   const row=document.createElement("div"); row.className="row";
-   row.innerHTML='<div><div class="title"></div><div class="meta"></div></div><div class="actions"><button class="btn primary open" type="button">Open</button><button class="btn copy" type="button">Duplicate</button><button class="btn del" type="button">Delete</button></div>';
-   row.querySelector(".title").textContent=x.name;
-   row.querySelector(".meta").textContent=`${x.main.length+x.encore.length} songs`;
-   row.querySelector(".open").onclick=()=>{main=clone(x.main);encore=clone(x.encore);persist();switchTab("set");renderAll()};
-   row.querySelector(".copy").onclick=()=>{saved.push({name:x.name+" copy",main:clone(x.main),encore:clone(x.encore)});persist();renderSaved()};
-   row.querySelector(".del").onclick=()=>{saved.splice(i,1);persist();renderSaved()};
-   host.appendChild(row);
+  const row=document.createElement("div");row.className="row";
+  row.innerHTML='<div><div class="title"></div><div class="meta"></div></div><div class="actions"><button class="btn primary open">Open</button><button class="btn copy">Duplicate</button><button class="btn del">Delete</button></div>';
+  row.querySelector(".title").textContent=x.name;
+  row.querySelector(".meta").textContent=`${x.main.length} songs`;
+  row.querySelector(".open").onclick=()=>{main=clone(x.main);persist();switchTab("set");renderAll()};
+  row.querySelector(".copy").onclick=()=>{saved.push({name:x.name+" copy",main:clone(x.main)});persist();renderSaved()};
+  row.querySelector(".del").onclick=()=>{if(confirm("Удалить сохранённый сет?")){saved.splice(i,1);persist();renderSaved()}};
+  host.appendChild(row);
  });
 }
 function switchTab(name){
  document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.tab===name));
  document.querySelectorAll(".panel").forEach(p=>p.classList.toggle("active",p.id==="panel-"+name));
 }
-function renderAll(){renderRep();renderSet(main,"main");renderSet(encore,"encore");renderSaved();summary()}
+function renderAll(){renderRep();renderSet();renderSaved();summary()}
 
 document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
-$("search").oninput=renderRep; $("filter").onchange=renderRep;
+$("search").oninput=renderRep;$("filter").onchange=renderRep;
+
 $("addForm").onsubmit=e=>{
  e.preventDefault();
- const title=$("newTitle").value.trim(), min=Number($("newMin").value), sec=Number($("newSec").value);
- if(!title || !Number.isInteger(min) || !Number.isInteger(sec) || min<0 || sec<0 || sec>59)return;
+ const title=$("newTitle").value.trim(),min=Number($("newMin").value),sec=Number($("newSec").value);
+ if(!title||!Number.isInteger(min)||!Number.isInteger(sec)||min<0||sec<0||sec>59)return;
  songs.push({id:"s"+Date.now(),title,duration:min*60+sec,project:$("newProject").value});
  $("newTitle").value="";$("newMin").value="";$("newSec").value="";
  persist();renderRep();
@@ -278,123 +315,69 @@ $("bulkAdd").onclick=()=>{
  const text=$("bulkText").value.trim();
  if(!text){$("bulkResult").textContent="Вставьте список песен.";return}
  const project=$("bulkProject").value;
- const lines=text.split(/\r?\n/).map(line=>line.trim()).filter(Boolean);
- let added=0;
- const skipped=[];
+ const lines=text.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+ let added=0;const skipped=[];
  lines.forEach((line,i)=>{
-   const match=line.match(/^(.*?)\s*(?:[—–-]\s*)?(\d{1,2}):([0-5]\d)\s*$/);
-   if(!match){skipped.push(i+1);return}
-   const title=match[1].trim().replace(/[—–-]\s*$/,"").trim();
-   const min=Number(match[2]);
-   const sec=Number(match[3]);
-   if(!title){skipped.push(i+1);return}
-   songs.push({
-     id:"s"+Date.now()+"_"+i+"_"+Math.random().toString(36).slice(2,7),
-     title,
-     duration:min*60+sec,
-     project
-   });
-   added++;
+  const m=line.match(/^(.*?)\s*(?:[—–-]\s*)?(\d{1,2}):([0-5]\d)\s*$/);
+  if(!m){skipped.push(i+1);return}
+  const title=m[1].trim().replace(/[—–-]\s*$/,"").trim();
+  if(!title){skipped.push(i+1);return}
+  songs.push({id:"s"+Date.now()+"_"+i+"_"+Math.random().toString(36).slice(2,7),title,duration:Number(m[2])*60+Number(m[3]),project});
+  added++;
  });
- if(added){
-   persist();
-   renderRep();
-   $("bulkText").value="";
- }
- $("bulkResult").textContent=skipped.length
-   ? "Добавлено: "+added+". Не распознаны строки: "+skipped.join(", ")+"."
-   : "Добавлено песен: "+added+".";
+ if(added){persist();renderRep();$("bulkText").value=""}
+ $("bulkResult").textContent=skipped.length?`Добавлено: ${added}. Не распознаны строки: ${skipped.join(", ")}.`:`Добавлено песен: ${added}.`;
+};
+
+$("clearSet").onclick=()=>{
+ if(!main.length)return;
+ if(!confirm("Очистить текущий сет?"))return;
+ main=[];persist();renderAll();
+};
+$("saveSet").onclick=()=>{
+ const name=$("setName").value.trim();if(!name)return;
+ const existing=saved.findIndex(x=>x.name.toLowerCase()===name.toLowerCase());
+ const obj={name,main:clone(main)};
+ if(existing>=0)saved[existing]=obj;else saved.push(obj);
+ $("setName").value="";persist();renderSaved();
 };
 
 $("exportBackup").onclick=async()=>{
  try{
- const data={
-   app:"Set List",
-   version:1,
-   exportedAt:new Date().toISOString(),
-   songs:songs,
-   main:main,
-   encore:encore,
-   saved:saved
- };
- const json=JSON.stringify(data,null,2);
- const filename="Set_List_Backup_"+new Date().toISOString().slice(0,10)+".json";
- const file=new File([json],filename,{type:"application/json"});
-
- try{
-   if(navigator.share && (!navigator.canShare || navigator.canShare({files:[file]}))){
-     await navigator.share({
-       title:"Set List Backup",
-       text:"Резервная копия Set List",
-       files:[file]
-     });
-     return;
+  const data={app:"Set List",version:2,exportedAt:new Date().toISOString(),songs,main,encore:[],saved:saved.map(x=>({name:x.name,main:x.main,encore:[]}))};
+  const json=JSON.stringify(data,null,2);
+  const filename="Set_List_Backup_"+new Date().toISOString().slice(0,10)+".json";
+  const file=new File([json],filename,{type:"application/json"});
+  try{
+   if(navigator.share&&(!navigator.canShare||navigator.canShare({files:[file]}))){
+    await navigator.share({title:"Set List Backup",text:"Резервная копия Set List",files:[file]});return;
    }
- }catch(err){
-   if(err && err.name==="AbortError") return;
- }
-
- try{
-   const blob=new Blob([json],{type:"application/json"});
-   const url=URL.createObjectURL(blob);
-   const a=document.createElement("a");
-   a.href=url;
-   a.download=filename;
-   a.style.display="none";
-   document.body.appendChild(a);
-   a.click();
-   a.remove();
-   setTimeout(()=>URL.revokeObjectURL(url),3000);
- }catch(err){
-   alert("Не удалось открыть экспорт. Попробуйте открыть сайт в Safari.");
- }
- }catch(err){
-   alert("Ошибка Backup: "+(err && err.message ? err.message : "unknown"));
- }
+  }catch(err){if(err&&err.name==="AbortError")return}
+  const blob=new Blob([json],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");
+  a.href=url;a.download=filename;a.style.display="none";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000);
+ }catch(err){alert("Ошибка Backup: "+(err&&err.message?err.message:"unknown"))}
 };
 $("importBackup").onclick=()=>$("backupFile").click();
 $("backupFile").onchange=async e=>{
- const file=e.target.files&&e.target.files[0]; if(!file)return;
+ const file=e.target.files&&e.target.files[0];if(!file)return;
  try{
-   const data=JSON.parse(await file.text());
-   if(!data||data.app!=="Set List"||!Array.isArray(data.songs)||!Array.isArray(data.main)||!Array.isArray(data.encore)||!Array.isArray(data.saved))throw new Error("invalid");
-   if(!confirm("Восстановить данные из backup? Текущие данные будут заменены.")){e.target.value="";return}
-   songs=data.songs; main=data.main; encore=data.encore; saved=data.saved;
-   persist(); renderAll(); alert("Backup восстановлен.");
- }catch(err){alert("Не удалось прочитать backup-файл.");}
+  const data=JSON.parse(await file.text());
+  if(!data||data.app!=="Set List"||!Array.isArray(data.songs)||!Array.isArray(data.main)||!Array.isArray(data.saved))throw new Error("invalid");
+  if(!confirm("Восстановить данные из backup? Текущие данные будут заменены.")){e.target.value="";return}
+  songs=data.songs;
+  main=[...(data.main||[]),...(data.encore||[])].filter((v,i,a)=>a.findIndex(y=>y.id===v.id)===i).map(x=>({id:x.id}));
+  saved=data.saved.map(x=>({name:x.name,main:[...(x.main||[]),...(x.encore||[])].filter((v,i,a)=>a.findIndex(y=>y.id===v.id)===i).map(y=>({id:y.id}))}));
+  persist();renderAll();alert("Backup восстановлен.");
+ }catch(err){alert("Не удалось прочитать backup-файл.")}
  e.target.value="";
 };
 
-$("clearSet").onclick=()=>{
- if(!main.length && !encore.length)return;
- if(!confirm("Очистить текущий сет? Main Set и Encore будут очищены."))return;
- main=[]; encore=[];
- persist(); renderAll();
-};
+persist();renderAll();
 
-$("saveSet").onclick=()=>{
- const name=$("setName").value.trim(); if(!name)return;
- const existing=saved.findIndex(x=>x.name.toLowerCase()===name.toLowerCase());
- const obj={name,main:clone(main),encore:clone(encore)};
- if(existing>=0)saved[existing]=obj; else saved.push(obj);
- $("setName").value="";persist();renderSaved();
-};
-renderAll();
-
-if("serviceWorker" in navigator && location.protocol.startsWith("http")){
- navigator.serviceWorker.register("service-worker.js").catch(()=>{});
+if("serviceWorker" in navigator){
+ navigator.serviceWorker.getRegistrations().then(regs=>Promise.all(regs.map(r=>r.unregister()))).catch(()=>{});
 }
-</script>
-
-<script>
-window.addEventListener("load",()=>{
-  if("serviceWorker" in navigator){
-    navigator.serviceWorker.getRegistrations().then(regs=>Promise.all(regs.map(r=>r.unregister()))).catch(()=>{});
-  }
-  if("caches" in window){
-    caches.keys().then(keys=>Promise.all(keys.map(k=>caches.delete(k)))).catch(()=>{});
-  }
-});
+if("caches" in window)caches.keys().then(keys=>Promise.all(keys.map(k=>caches.delete(k)))).catch(()=>{});
 </script>
 </body>
 </html>

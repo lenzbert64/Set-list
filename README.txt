@@ -1,10 +1,16 @@
-Set List PWA v1.8
+Set List PWA v1.9
 
-Исправление Backup:
-- Исправлена ошибка имени переменной Saved Sets, из-за которой Export Backup молча не запускался.
-- Исправлено восстановление Saved Sets в Import Backup.
-- Добавлено сообщение при неожиданной ошибке экспорта.
-- Version 1.8 отображается под заголовком.
-- Кэширование по-прежнему временно отключено.
+UX update:
+- Compact repertoire rows; project name hidden in song rows.
+- Encore removed. Existing Encore songs are merged into Main Set on first launch.
+- Pauses removed.
+- + / green ✓ button toggles songs in Current Set.
+- Long press song title to edit.
+- Current Set reorder uses ≡ drag handle instead of arrows.
+- Sticky Current Set summary: song count + Total only.
+- Add song / bulk add are collapsed compact sections.
+- Backup / Restore moved to bottom of Saved Sets.
+- v1.8 backups remain import-compatible.
+- Caching remains disabled during development.
 
-После загрузки 4 файлов в GitHub просто перезагрузите сайт и убедитесь, что видно Version 1.8.
+Upload the four files to the GitHub repository root and confirm Version 1.9 is visible.

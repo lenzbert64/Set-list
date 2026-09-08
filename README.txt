@@ -1,8 +1,6 @@
-Set List PWA v1.4
-
-- Repertoire: кнопка Edit у каждой песни.
-- Можно изменить название, минуты, секунды и проект.
-- Песня сохраняет ID, поэтому изменения автоматически видны в Current Set и Saved Sets.
-- Все функции v1.3 сохранены.
-
-Обновление: заменить 4 файла в GitHub, Commit changes, затем открыть сайт с ?v=14.
+Set List PWA v1.5
+- Backup / Restore added to Saved Sets.
+- Export saves repertoire, manual order, Current Set and Saved Sets to JSON.
+- Import restores them after confirmation.
+- All v1.4 functions retained.
+After GitHub update open the site with ?v=15.

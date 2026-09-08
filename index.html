@@ -127,6 +127,15 @@ textarea{width:100%;min-height:150px;resize:vertical}
   </section>
 
   <section id="panel-saved" class="panel">
+    <div class="card">
+      <div class="section">Backup / Restore</div>
+      <div class="actions">
+        <button id="exportBackup" class="btn primary" type="button">Export Backup</button>
+        <button id="importBackup" class="btn" type="button">Import Backup</button>
+        <input id="backupFile" type="file" accept=".json,application/json" style="display:none">
+      </div>
+      <div class="note">Backup содержит репертуар, ручной порядок, Current Set и все Saved Sets.</div>
+    </div>
     <div class="card"><div class="section">Saved Sets</div><div id="saved"></div></div>
   </section>
 </div>
@@ -295,6 +304,37 @@ $("bulkAdd").onclick=()=>{
  $("bulkResult").textContent=skipped.length
    ? "Добавлено: "+added+". Не распознаны строки: "+skipped.join(", ")+"."
    : "Добавлено песен: "+added+".";
+};
+
+$("exportBackup").onclick=()=>{
+ const data={
+   app:"Set List",
+   version:1,
+   exportedAt:new Date().toISOString(),
+   songs:songs,
+   main:main,
+   encore:encore,
+   saved:sets
+ };
+ const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+ const url=URL.createObjectURL(blob);
+ const a=document.createElement("a");
+ a.href=url;
+ a.download="Set_List_Backup_"+new Date().toISOString().slice(0,10)+".json";
+ document.body.appendChild(a); a.click(); a.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),1000);
+};
+$("importBackup").onclick=()=>$("backupFile").click();
+$("backupFile").onchange=async e=>{
+ const file=e.target.files&&e.target.files[0]; if(!file)return;
+ try{
+   const data=JSON.parse(await file.text());
+   if(!data||data.app!=="Set List"||!Array.isArray(data.songs)||!Array.isArray(data.main)||!Array.isArray(data.encore)||!Array.isArray(data.saved))throw new Error("invalid");
+   if(!confirm("Восстановить данные из backup? Текущие данные будут заменены.")){e.target.value="";return}
+   songs=data.songs; main=data.main; encore=data.encore; sets=data.saved;
+   persist(); renderAll(); alert("Backup восстановлен.");
+ }catch(err){alert("Не удалось прочитать backup-файл.");}
+ e.target.value="";
 };
 
 $("clearSet").onclick=()=>{

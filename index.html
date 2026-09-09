@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -115,12 +115,26 @@ button, input, select, textarea, summary, .row, .setrow, .handle, .title, .tab {
   -webkit-backdrop-filter:none;
 }
 
+
+.savedHeader{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;margin-bottom:4px}
+.savedHeader .section{margin-bottom:0}
+.savedHeader select{min-width:132px;max-width:180px}
+#undoSaved{display:block;width:100%}
+#undoSaved:disabled{opacity:.42}
+.savedSavebar{grid-template-columns:minmax(0,1fr) minmax(120px,auto) auto}
+.savedopen .title{touch-action:manipulation}
+@media(max-width:650px){
+ .savedSavebar{grid-template-columns:minmax(0,1fr) auto}
+ .savedSavebar #setCategory{grid-column:1}
+ .savedSavebar #saveSet{grid-column:2;grid-row:1/3}
+}
+
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="header">
-    <div><h1>Set List</h1><div class="version">Version 1.23</div></div>
+    <div><h1>Set List</h1><div class="version">Version 1.24</div></div>
   </div>
 
   <div class="tabs">
@@ -133,11 +147,7 @@ button, input, select, textarea, summary, .row, .setrow, .handle, .title, .tab {
     <div class="card">
       <div class="toolbar">
         <input id="search" type="search" placeholder="Search songs...">
-        <select id="filter">
-          <option value="All">All</option>
-          <option value="MessAge">MessAge</option>
-          <option value="Браво">Браво</option>
-        </select>
+        <select id="filter"></select>
       </div>
       <div class="stickyStats"><div class="statbar"><span id="repCount">0</span> songs · Total <span id="repTotal">0:00</span></div></div>
       <div id="rep"></div>
@@ -148,21 +158,21 @@ button, input, select, textarea, summary, .row, .setrow, .handle, .title, .tab {
       <summary>Add song</summary>
       <form id="addForm" class="form">
         <input id="newTitle" type="text" placeholder="Title" required>
-        <input id="newMin" type="number" min="0" max="99" inputmode="numeric" placeholder="мин" required>
-        <input id="newSec" type="number" min="0" max="59" inputmode="numeric" placeholder="сек" required>
-        <select id="newProject"><option>Браво</option><option>MessAge</option></select>
+        <input id="newMin" type="number" min="0" max="99" inputmode="numeric" placeholder="min" required>
+        <input id="newSec" type="number" min="0" max="59" inputmode="numeric" placeholder="sec" required>
+        <select id="newProject"></select>
         <button class="btn primary add" type="submit">Add</button>
       </form>
     </details>
 
     <details class="card addCard">
       <summary>Add songs as a list</summary>
-      <textarea id="bulkText" placeholder="Этот город — 3:42&#10;Любите, девушки — 4:05&#10;Вася — 3:18"></textarea>
+      <textarea id="bulkText" placeholder="Song One — 3:42&#10;Song Two — 4:05&#10;Song Three — 3:18"></textarea>
       <div class="bulkActions">
-        <select id="bulkProject"><option>Браво</option><option>MessAge</option></select>
-        <button id="bulkAdd" class="btn primary" type="button">Добавить все</button>
+        <select id="bulkProject"></select>
+        <button id="bulkAdd" class="btn primary" type="button">Add all</button>
       </div>
-      <div class="note">Одна песня на строку: Название — 3:42.</div>
+      <div class="note">One song per line: Title — 3:42.</div>
       <div id="bulkResult" class="note"></div>
     </details>
   </section>
@@ -177,15 +187,26 @@ button, input, select, textarea, summary, .row, .setrow, .handle, .title, .tab {
     </div>
     <div class="card">
       <div class="section">Save current set</div>
-      <div class="savebar">
+      <div class="savebar savedSavebar">
         <input id="setName" type="text" placeholder="Set name">
+        <select id="setCategory"></select>
         <button id="saveSet" class="btn primary" type="button">Save</button>
       </div>
     </div>
   </section>
 
   <section id="panel-saved" class="panel">
-    <div class="card"><div class="section">Saved Sets</div><div id="saved"></div></div>
+    <div class="card">
+      <div class="savedHeader">
+        <div class="section">Saved Sets</div>
+        <select id="savedFilter"></select>
+      </div>
+      <div id="saved"></div>
+      <div class="holdhint">Press and hold a saved set name to rename it or change its category.</div>
+    </div>
+    <div class="card">
+      <button id="undoSaved" class="btn" type="button" disabled>Undo last change</button>
+    </div>
     <div class="card backup">
       <div class="section">Backup / Restore</div>
       <div class="actions">
@@ -211,6 +232,15 @@ const $=id=>document.getElementById(id);
 
 let songs=JSON.parse(localStorage.getItem("setlist_songs")||"null") ||
  starter.map((x,i)=>({id:"m"+i,title:x[0],duration:x[1]*60+x[2],project:"MessAge"}));
+
+const uniqueClean=arr=>[...new Set(arr.map(x=>(x||"").trim()).filter(Boolean))];
+let repCategories=JSON.parse(localStorage.getItem("setlist_rep_categories")||"null");
+if(!Array.isArray(repCategories)){
+ repCategories=uniqueClean(["MessAge","Браво",...songs.map(s=>s.project)]);
+}else{
+ repCategories=uniqueClean([...repCategories,...songs.map(s=>s.project)]);
+}
+
 let main=JSON.parse(localStorage.getItem("setlist_main")||"[]");
 let currentSetName=localStorage.getItem("setlist_current_name")||"";
 let oldEncore=JSON.parse(localStorage.getItem("setlist_encore")||"[]");
@@ -221,22 +251,90 @@ if(oldEncore.length){
 }
 let saved=JSON.parse(localStorage.getItem("setlist_saved")||"[]").map(x=>({
  name:x.name,
+ category:(x.category||"Uncategorized").trim()||"Uncategorized",
  main:[...(x.main||[]),...(x.encore||[])].filter((v,i,a)=>a.findIndex(y=>y.id===v.id)===i)
 }));
+let savedCategories=JSON.parse(localStorage.getItem("setlist_saved_categories")||"null");
+if(!Array.isArray(savedCategories)){
+ savedCategories=uniqueClean(["Uncategorized",...saved.map(x=>x.category)]);
+}else{
+ savedCategories=uniqueClean(["Uncategorized",...savedCategories,...saved.map(x=>x.category)]);
+}
+
 let undoMain=null;
 function rememberMainForUndo(){undoMain={main:clone(main),name:currentSetName};updateUndoButton()}
 function updateUndoButton(){const b=$("undoSet");if(b)b.disabled=!undoMain}
 
+let undoSaved=null;
+function rememberSavedForUndo(){
+ undoSaved={saved:clone(saved),categories:clone(savedCategories)};
+ updateSavedUndoButton();
+}
+function updateSavedUndoButton(){
+ const b=$("undoSaved");if(b)b.disabled=!undoSaved;
+}
+
 
 function persist(){
  localStorage.setItem("setlist_songs",JSON.stringify(songs));
+ localStorage.setItem("setlist_rep_categories",JSON.stringify(repCategories));
  localStorage.setItem("setlist_main",JSON.stringify(main.map(x=>({id:x.id}))));
  localStorage.setItem("setlist_current_name",currentSetName);
  localStorage.setItem("setlist_encore","[]");
- localStorage.setItem("setlist_saved",JSON.stringify(saved.map(x=>({name:x.name,main:x.main,encore:[]}))));
+ localStorage.setItem("setlist_saved_categories",JSON.stringify(savedCategories));
+ localStorage.setItem("setlist_saved",JSON.stringify(saved.map(x=>({name:x.name,category:x.category,main:x.main,encore:[]}))));
 }
 const byId=id=>songs.find(s=>s.id===id);
 const inSet=id=>main.some(x=>x.id===id);
+
+const NEW_CATEGORY="__new_category__";
+
+function fillCategorySelect(select,categories,{includeAll=false,includeNew=false,selected=null}={}){
+ const prev=selected!==null?selected:select.value;
+ select.innerHTML="";
+ if(includeAll){
+  const o=document.createElement("option");o.value="All";o.textContent="All";select.appendChild(o);
+ }
+ categories.forEach(cat=>{
+  const o=document.createElement("option");o.value=cat;o.textContent=cat;select.appendChild(o);
+ });
+ if(includeNew){
+  const o=document.createElement("option");o.value=NEW_CATEGORY;o.textContent="New category…";select.appendChild(o);
+ }
+ const values=[...select.options].map(o=>o.value);
+ if(values.includes(prev))select.value=prev;
+ else if(includeAll)select.value="All";
+ else if(values.length)select.value=values[0];
+}
+
+function refreshCategoryControls(){
+ fillCategorySelect($("filter"),repCategories,{includeAll:true,includeNew:true});
+ fillCategorySelect($("newProject"),repCategories);
+ fillCategorySelect($("bulkProject"),repCategories);
+ fillCategorySelect($("savedFilter"),savedCategories,{includeAll:true,includeNew:true});
+ fillCategorySelect($("setCategory"),savedCategories);
+}
+
+function createRepCategory(){
+ const name=prompt("New Repertoire category name:");
+ if(name===null)return null;
+ const clean=name.trim();
+ if(!clean){alert("Category name cannot be empty.");return null}
+ const existing=repCategories.find(x=>x.toLowerCase()===clean.toLowerCase());
+ if(existing)return existing;
+ repCategories.push(clean);persist();refreshCategoryControls();return clean;
+}
+
+function createSavedCategory(){
+ const name=prompt("New Saved Sets category name:");
+ if(name===null)return null;
+ const clean=name.trim();
+ if(!clean){alert("Category name cannot be empty.");return null}
+ const existing=savedCategories.find(x=>x.toLowerCase()===clean.toLowerCase());
+ if(existing)return existing;
+ rememberSavedForUndo();
+ savedCategories.push(clean);persist();refreshCategoryControls();return clean;
+}
 
 function summary(){
  const total=main.reduce((n,x)=>n+(byId(x.id)?.duration||0),0);
@@ -249,20 +347,19 @@ function summary(){
 }
 function editSong(id){
  const s=byId(id); if(!s)return;
- const title=prompt("Название песни:",s.title); if(title===null)return;
- const cleanTitle=title.trim(); if(!cleanTitle){alert("Название не может быть пустым.");return}
- const minText=prompt("Минуты:",String(Math.floor(s.duration/60))); if(minText===null)return;
- const secText=prompt("Секунды (0–59):",String(s.duration%60)); if(secText===null)return;
+ const title=prompt("Song title:",s.title); if(title===null)return;
+ const cleanTitle=title.trim(); if(!cleanTitle){alert("Song title cannot be empty.");return}
+ const minText=prompt("Minutes:",String(Math.floor(s.duration/60))); if(minText===null)return;
+ const secText=prompt("Seconds (0–59):",String(s.duration%60)); if(secText===null)return;
  const min=Number(minText),sec=Number(secText);
- if(!Number.isInteger(min)||min<0||!Number.isInteger(sec)||sec<0||sec>59){alert("Неверно указано время.");return}
- const projectText=prompt("Проект: Браво или MessAge",s.project); if(projectText===null)return;
- const normalized=projectText.trim().toLowerCase();
- let project;
- if(normalized==="браво")project="Браво";
- else if(normalized==="message")project="MessAge";
- else{alert("Проект должен быть «Браво» или «MessAge».");return}
+ if(!Number.isInteger(min)||min<0||!Number.isInteger(sec)||sec<0||sec>59){alert("Invalid duration.");return}
+ const projectText=prompt("Category:",s.project); if(projectText===null)return;
+ const cleanProject=projectText.trim();
+ if(!cleanProject){alert("Category cannot be empty.");return}
+ let project=repCategories.find(x=>x.toLowerCase()===cleanProject.toLowerCase());
+ if(!project){repCategories.push(cleanProject);project=cleanProject}
  s.title=cleanTitle;s.duration=min*60+sec;s.project=project;
- persist();renderAll();
+ persist();refreshCategoryControls();renderAll();
 }
 function toggleSet(id){
  rememberMainForUndo();
@@ -279,6 +376,16 @@ function bindLongPress(el,id){
  el.addEventListener("touchend",cancel,{passive:true});
  el.addEventListener("touchcancel",cancel,{passive:true});
  el.addEventListener("contextmenu",e=>{e.preventDefault();editSong(id)});
+}
+function bindLongPressAction(el,action){
+ let timer=null,moved=false;
+ const start=()=>{moved=false;timer=setTimeout(()=>{timer=null;if(!moved)action()},600)};
+ const cancel=()=>{if(timer){clearTimeout(timer);timer=null}};
+ el.addEventListener("touchstart",start,{passive:true});
+ el.addEventListener("touchmove",()=>{moved=true;cancel()},{passive:true});
+ el.addEventListener("touchend",cancel,{passive:true});
+ el.addEventListener("touchcancel",cancel,{passive:true});
+ el.addEventListener("contextmenu",e=>{e.preventDefault();action()});
 }
 function reorderVisibleSongs(visibleIds){
  const visibleSet=new Set(visibleIds),slots=[];
@@ -352,17 +459,17 @@ function renderRep(){
  const q=$("search").value.trim().toLowerCase(),f=$("filter").value,host=$("rep");
  host.innerHTML="";
  const list=songs.filter(s=>(f==="All"||s.project===f)&&s.title.toLowerCase().includes(q));
- if(!list.length){host.innerHTML='<div class="empty">Ничего не найдено</div>';return}
+ if(!list.length){host.innerHTML='<div class="empty">No songs found</div>';return}
  list.forEach(s=>{
   const row=document.createElement("div");row.className="row";row.dataset.id=s.id;
-  row.innerHTML='<div class="songline"><div class="title"></div><div class="duration"></div></div><div class="handle" title="Перетащить">≡</div><button class="btn toggle" type="button"></button>';
+  row.innerHTML='<div class="songline"><div class="title"></div><div class="duration"></div></div><div class="handle" title="Drag">≡</div><button class="btn toggle" type="button"></button>';
   const title=row.querySelector(".title"),btn=row.querySelector(".toggle"),handle=row.querySelector(".handle");
   title.textContent=s.title;
   row.querySelector(".duration").textContent=fmt(s.duration);
   const selected=inSet(s.id);
   btn.textContent=selected?"✓":"+";
   btn.classList.toggle("inset",selected);
-  btn.setAttribute("aria-label",selected?"Убрать из Current Set":"Добавить в Current Set");
+  btn.setAttribute("aria-label",selected?"Remove from Current Set":"Add to Current Set");
   btn.onclick=()=>toggleSet(s.id);
   bindLongPress(title,s.id);
   enableHandleDrag(handle,row,host,()=>{
@@ -374,11 +481,11 @@ function renderRep(){
 }
 function renderSet(){
  const host=$("main");host.innerHTML="";
- if(!main.length){host.innerHTML='<div class="empty">Пока пусто</div>';return}
+ if(!main.length){host.innerHTML='<div class="empty">Current Set is empty</div>';return}
  main.forEach((item,i)=>{
   const s=byId(item.id);if(!s)return;
   const row=document.createElement("div");row.className="setrow";row.dataset.id=s.id;
-  row.innerHTML='<div class="num"></div><div class="songline"><div class="title"></div><div class="duration"></div></div><button class="btn remove" type="button" aria-label="Убрать из Current Set">−</button><div class="handle" title="Перетащить">≡</div>';
+  row.innerHTML='<div class="num"></div><div class="songline"><div class="title"></div><div class="duration"></div></div><button class="btn remove" type="button" aria-label="Remove from Current Set">−</button><div class="handle" title="Drag">≡</div>';
   row.querySelector(".num").textContent=i+1;
   row.querySelector(".title").textContent=s.title;
   row.querySelector(".duration").textContent=fmt(s.duration);
@@ -393,21 +500,59 @@ function renderSet(){
   host.appendChild(row);
  });
 }
+function editSavedSet(index){
+ const x=saved[index];if(!x)return false;
+ const name=prompt("Saved set name:",x.name);if(name===null)return false;
+ const cleanName=name.trim();if(!cleanName){alert("Saved set name cannot be empty.");return false}
+ const categoryText=prompt("Category:",x.category||"Uncategorized");if(categoryText===null)return false;
+ const cleanCategory=categoryText.trim();if(!cleanCategory){alert("Category cannot be empty.");return false}
+ let category=savedCategories.find(c=>c.toLowerCase()===cleanCategory.toLowerCase());
+ const oldName=x.name;
+ rememberSavedForUndo();
+ if(!category){savedCategories.push(cleanCategory);category=cleanCategory}
+ x.name=cleanName;x.category=category;
+ if(currentSetName===oldName)currentSetName=cleanName;
+ persist();refreshCategoryControls();renderAll();return true;
+}
+
 function renderSaved(){
  const host=$("saved");host.innerHTML="";
- if(!saved.length){host.innerHTML='<div class="empty">No saved sets yet</div>';return}
- saved.forEach((x,i)=>{
+ const f=$("savedFilter").value||"All";
+ const indexes=saved.map((x,i)=>({x,i})).filter(v=>f==="All"||v.x.category===f);
+ if(!indexes.length){host.innerHTML='<div class="empty">No saved sets in this category</div>';return}
+ indexes.forEach(({x,i})=>{
   const row=document.createElement("div");row.className="savedrow";
   row.innerHTML='<div class="savedopen" role="button" tabindex="0"><div class="title"></div><div class="meta"></div></div><button class="btn savedmini copy">Duplicate</button><button class="btn savedmini del">Delete</button>';
-  row.querySelector(".title").textContent=x.name;
+  const title=row.querySelector(".title");
+  title.textContent=x.name;
   const savedTotal=x.main.reduce((n,item)=>n+(byId(item.id)?.duration||0),0);
   row.querySelector(".meta").textContent=`${x.main.length} songs · Total ${fmt(savedTotal)}`;
-  const openSet=()=>{rememberMainForUndo();main=clone(x.main);currentSetName=x.name;persist();switchTab("set");renderAll()};
+
+  let suppressOpenUntil=0;
+  const openSet=()=>{
+   if(Date.now()<suppressOpenUntil)return;
+   rememberMainForUndo();main=clone(x.main);currentSetName=x.name;persist();switchTab("set");renderAll();
+  };
   const open=row.querySelector(".savedopen");
   open.onclick=openSet;
   open.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openSet()}};
-  row.querySelector(".copy").onclick=()=>{saved.push({name:x.name+" copy",main:clone(x.main)});persist();renderSaved()};
-  row.querySelector(".del").onclick=()=>{if(confirm("Delete this saved set?")){saved.splice(i,1);persist();renderSaved()}};
+
+  bindLongPressAction(title,()=>{
+   suppressOpenUntil=Date.now()+900;
+   editSavedSet(i);
+  });
+
+  row.querySelector(".copy").onclick=()=>{
+   rememberSavedForUndo();
+   saved.push({name:x.name+" copy",category:x.category,main:clone(x.main)});
+   persist();renderSaved();updateSavedUndoButton();
+  };
+  row.querySelector(".del").onclick=()=>{
+   if(confirm("Delete this saved set?")){
+    rememberSavedForUndo();
+    saved.splice(i,1);persist();renderSaved();updateSavedUndoButton();
+   }
+  };
   host.appendChild(row);
  });
 }
@@ -415,10 +560,26 @@ function switchTab(name){
  document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.tab===name));
  document.querySelectorAll(".panel").forEach(p=>p.classList.toggle("active",p.id==="panel-"+name));
 }
-function renderAll(){renderRep();renderSet();renderSaved();summary();updateUndoButton()}
+function renderAll(){renderRep();renderSet();renderSaved();summary();updateUndoButton();updateSavedUndoButton()}
 
 document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
-$("search").oninput=renderRep;$("filter").onchange=renderRep;
+$("search").oninput=renderRep;
+$("filter").onchange=()=>{
+ if($("filter").value===NEW_CATEGORY){
+  const cat=createRepCategory();
+  refreshCategoryControls();
+  $("filter").value=cat||"All";
+ }
+ renderRep();
+};
+$("savedFilter").onchange=()=>{
+ if($("savedFilter").value===NEW_CATEGORY){
+  const cat=createSavedCategory();
+  refreshCategoryControls();
+  $("savedFilter").value=cat||"All";
+ }
+ renderSaved();updateSavedUndoButton();
+};
 
 $("addForm").onsubmit=e=>{
  e.preventDefault();
@@ -430,7 +591,7 @@ $("addForm").onsubmit=e=>{
 };
 $("bulkAdd").onclick=()=>{
  const text=$("bulkText").value.trim();
- if(!text){$("bulkResult").textContent="Вставьте список песен.";return}
+ if(!text){$("bulkResult").textContent="Paste a list of songs.";return}
  const project=$("bulkProject").value;
  const lines=text.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
  let added=0;const skipped=[];
@@ -443,7 +604,15 @@ $("bulkAdd").onclick=()=>{
   added++;
  });
  if(added){persist();renderRep();$("bulkText").value=""}
- $("bulkResult").textContent=skipped.length?`Добавлено: ${added}. Не распознаны строки: ${skipped.join(", ")}.`:`Добавлено песен: ${added}.`;
+ $("bulkResult").textContent=skipped.length?`Added: ${added}. Unrecognized lines: ${skipped.join(", ")}.`:`Songs added: ${added}.`;
+};
+
+$("undoSaved").onclick=()=>{
+ if(!undoSaved)return;
+ saved=clone(undoSaved.saved);
+ savedCategories=clone(undoSaved.categories);
+ undoSaved=null;
+ persist();refreshCategoryControls();renderAll();
 };
 
 $("undoSet").onclick=()=>{
@@ -461,26 +630,29 @@ $("clearSet").onclick=()=>{
 };
 $("saveSet").onclick=()=>{
  const name=$("setName").value.trim();if(!name)return;
+ const category=$("setCategory").value||"Uncategorized";
  const existing=saved.findIndex(x=>x.name.toLowerCase()===name.toLowerCase());
- const obj={name,main:clone(main)};
+ const obj={name,category,main:clone(main)};
+ rememberSavedForUndo();
  if(existing>=0)saved[existing]=obj;else saved.push(obj);
- $("setName").value="";persist();renderSaved();
+ currentSetName=name;
+ $("setName").value="";persist();renderAll();
 };
 
 $("exportBackup").onclick=async()=>{
  try{
-  const data={app:"Set List",version:2,exportedAt:new Date().toISOString(),songs,main,encore:[],saved:saved.map(x=>({name:x.name,main:x.main,encore:[]}))};
+  const data={app:"Set List",version:3,exportedAt:new Date().toISOString(),songs,repCategories,main,currentSetName,encore:[],savedCategories,saved:saved.map(x=>({name:x.name,category:x.category,main:x.main,encore:[]}))};
   const json=JSON.stringify(data,null,2);
   const filename="Set_List_Backup_"+new Date().toISOString().slice(0,10)+".json";
   const file=new File([json],filename,{type:"application/json"});
   try{
    if(navigator.share&&(!navigator.canShare||navigator.canShare({files:[file]}))){
-    await navigator.share({title:"Set List Backup",text:"Резервная копия Set List",files:[file]});return;
+    await navigator.share({title:"Set List Backup",text:"Set List backup",files:[file]});return;
    }
   }catch(err){if(err&&err.name==="AbortError")return}
   const blob=new Blob([json],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");
   a.href=url;a.download=filename;a.style.display="none";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000);
- }catch(err){alert("Ошибка Backup: "+(err&&err.message?err.message:"unknown"))}
+ }catch(err){alert("Backup error: "+(err&&err.message?err.message:"unknown"))}
 };
 $("importBackup").onclick=()=>$("backupFile").click();
 $("backupFile").onchange=async e=>{
@@ -488,18 +660,20 @@ $("backupFile").onchange=async e=>{
  try{
   const data=JSON.parse(await file.text());
   if(!data||data.app!=="Set List"||!Array.isArray(data.songs)||!Array.isArray(data.main)||!Array.isArray(data.saved))throw new Error("invalid");
-  if(!confirm("Восстановить данные из backup? Текущие данные будут заменены.")){e.target.value="";return}
+  if(!confirm("Restore this backup? Current data will be replaced.")){e.target.value="";return}
   songs=data.songs;
-  undoMain=null;
+  repCategories=Array.isArray(data.repCategories)?uniqueClean([...data.repCategories,...songs.map(s=>s.project)]):uniqueClean(["MessAge","Браво",...songs.map(s=>s.project)]);
+  undoMain=null;undoSaved=null;
   currentSetName=data.currentSetName||"";
   main=[...(data.main||[]),...(data.encore||[])].filter((v,i,a)=>a.findIndex(y=>y.id===v.id)===i).map(x=>({id:x.id}));
-  saved=data.saved.map(x=>({name:x.name,main:[...(x.main||[]),...(x.encore||[])].filter((v,i,a)=>a.findIndex(y=>y.id===v.id)===i).map(y=>({id:y.id}))}));
-  persist();renderAll();alert("Backup восстановлен.");
- }catch(err){alert("Не удалось прочитать backup-файл.")}
+  saved=data.saved.map(x=>({name:x.name,category:(x.category||"Uncategorized").trim()||"Uncategorized",main:[...(x.main||[]),...(x.encore||[])].filter((v,i,a)=>a.findIndex(y=>y.id===v.id)===i).map(y=>({id:y.id}))}));
+  savedCategories=Array.isArray(data.savedCategories)?uniqueClean(["Uncategorized",...data.savedCategories,...saved.map(x=>x.category)]):uniqueClean(["Uncategorized",...saved.map(x=>x.category)]);
+  persist();refreshCategoryControls();renderAll();alert("Backup restored.");
+ }catch(err){alert("Could not read the backup file.")}
  e.target.value="";
 };
 
-persist();renderAll();
+persist();refreshCategoryControls();renderAll();
 
 if("serviceWorker" in navigator){
  navigator.serviceWorker.getRegistrations().then(regs=>Promise.all(regs.map(r=>r.unregister()))).catch(()=>{});

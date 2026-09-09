@@ -1,9 +1,11 @@
-Set List PWA v1.28
+Set List PWA v1.29
 
-Fix for Current Set long-press editing:
-- Existing named Current Sets from v1.26/v1.27 are automatically linked to the matching Saved Set by name.
-- Long-press on the Current Set name now uses an iOS-specific touch handler.
-- iOS text selection / Copy / Find popup is suppressed on the Current Set name.
-- Saved Set names also suppress text-selection callouts during long press.
-- All v1.27 data and backup compatibility remain intact.
+Current Set update:
+- Added “Update current set” directly below “Clear current set”.
+- It is enabled only when Current Set is linked to an existing Saved Set.
+- Pressing it asks for confirmation before overwriting that Saved Set's song contents and order.
+- Saved Set name and category are unchanged.
+- Saved Sets Undo can revert the update.
+- “Save current set” below remains Save As and creates a new Saved Set.
+- All v1.28 data and backups remain compatible.
 - Caching remains disabled during development.

@@ -53,8 +53,9 @@ textarea{width:100%;min-height:120px;resize:vertical}
 .savebar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px}
 .backup{margin-top:28px}
 #undoSet{display:block;width:100%;margin:0 0 8px 0}
-#clearSet{display:block;width:100%}
-#undoSet:disabled{opacity:.42}
+#clearSet{display:block;width:100%;margin:0 0 8px 0}
+#updateSet{display:block;width:100%}
+#undoSet:disabled,#updateSet:disabled{opacity:.42}
 .holdhint{font-size:11px;color:#8a8f96;margin-top:4px}
 
 .savedrow{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:6px;align-items:center;padding:7px 0;border-top:1px solid #eceef1}
@@ -146,7 +147,7 @@ button, input, select, textarea, summary, .row, .setrow, .handle, .title, .tab {
 <body>
 <div class="wrap">
   <div class="header">
-    <div><h1>Set List</h1><div class="version">Version 1.28</div></div>
+    <div><h1>Set List</h1><div class="version">Version 1.29</div></div>
   </div>
 
   <div class="tabs">
@@ -198,6 +199,7 @@ button, input, select, textarea, summary, .row, .setrow, .handle, .title, .tab {
     <div class="card">
       <button id="undoSet" class="btn" type="button" disabled>Undo last change</button>
       <button id="clearSet" class="btn" type="button">Clear current set</button>
+      <button id="updateSet" class="btn" type="button" disabled>Update current set</button>
     </div>
     <div class="card">
       <div class="section">Save current set</div>
@@ -284,6 +286,11 @@ if(!Array.isArray(savedCategories)){
 let undoMain=null;
 function rememberMainForUndo(){undoMain={main:clone(main),name:currentSetName,savedId:currentSavedId};updateUndoButton()}
 function updateUndoButton(){const b=$("undoSet");if(b)b.disabled=!undoMain}
+function updateCurrentSetButton(){
+ const b=$("updateSet");
+ if(!b)return;
+ b.disabled=!currentSavedId || !saved.some(x=>x.id===currentSavedId);
+}
 
 let undoSaved=null;
 function rememberSavedForUndo(){
@@ -622,7 +629,7 @@ function switchTab(name){
  document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.tab===name));
  document.querySelectorAll(".panel").forEach(p=>p.classList.toggle("active",p.id==="panel-"+name));
 }
-function renderAll(){renderRep();renderSet();renderSaved();summary();updateUndoButton();updateSavedUndoButton()}
+function renderAll(){renderRep();renderSet();renderSaved();summary();updateUndoButton();updateSavedUndoButton();updateCurrentSetButton()}
 
 document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
 $("search").oninput=renderRep;
@@ -730,6 +737,17 @@ $("undoSet").onclick=()=>{
  undoMain=null;
  persist();renderAll();
 };
+$("updateSet").onclick=()=>{
+ if(!currentSavedId)return;
+ const index=saved.findIndex(x=>x.id===currentSavedId);
+ if(index<0){updateCurrentSetButton();return}
+ const target=saved[index];
+ if(!confirm(`Update "${target.name}" with the current song order and contents?`))return;
+ rememberSavedForUndo();
+ target.main=clone(main);
+ persist();renderAll();
+};
+
 $("clearSet").onclick=()=>{
  if(!main.length)return;
  if(!confirm("Clear the current set?"))return;

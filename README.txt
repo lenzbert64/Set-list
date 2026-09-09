@@ -1,13 +1,9 @@
-Set List PWA v1.27
+Set List PWA v1.28
 
-Current Set editing / Save As refinement:
-- Press and hold the Current Set name bar to edit that exact saved set's name and category.
-- Category picker includes all existing Saved Sets categories plus “New category…”.
-- The Current Set keeps a stable link to the saved set that was opened/saved, so renaming targets the correct set.
-- The bottom “Save current set” area now acts as Save As: it always creates a new saved set instead of overwriting an existing one.
-- Its category selector includes “New category…”.
-- “New category…” is also available in Add Song and Add songs as a list.
-- Repertoire and Saved Sets category systems remain independent.
-- Backup format v4 stores saved-set IDs and the currently linked saved set.
-- Older data/backups remain compatible.
+Fix for Current Set long-press editing:
+- Existing named Current Sets from v1.26/v1.27 are automatically linked to the matching Saved Set by name.
+- Long-press on the Current Set name now uses an iOS-specific touch handler.
+- iOS text selection / Copy / Find popup is suppressed on the Current Set name.
+- Saved Set names also suppress text-selection callouts during long press.
+- All v1.27 data and backup compatibility remain intact.
 - Caching remains disabled during development.

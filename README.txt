@@ -1,7 +1,8 @@
-Set List PWA v1.37
+Set List PWA v1.38
 
-Fix:
-- Current Set Undo button now reliably restores previous states.
-- Undo history remains 10 steps.
-- Undo button enabled/disabled state is refreshed after renders and after undo.
-- Delayed 1-second red-outline deletion remains unchanged.
+Bug fix:
+- Fixed Current Set Undo.
+- Root cause in v1.37: Undo called cancelPendingDeletes(), but that function was missing, causing a JavaScript ReferenceError before the undo state could be restored.
+- Added cancelPendingDeletes() properly.
+- Clear Current Set and opening a Saved Set also now safely cancel pending 1-second deletions.
+- 10-step Undo and delayed red-outline deletion remain unchanged.

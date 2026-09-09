@@ -1,9 +1,10 @@
-Set List PWA v1.39
+Set List PWA v1.40
 
-Saved Sets rename fix:
-- Fixed duplicate long-press firing on iPhone/Safari.
-- A single long press can now trigger the Saved Set editor only once.
-- Added a per-set edit lock so two rename/category edit flows cannot overlap.
-- This prevents names from apparently not saving and prevents an unexpected second category/new-category prompt.
-- Current Set 10-step Undo and delayed deletion remain unchanged.
-- Based on v1.38 stable.
+Saved Sets editor rebuilt:
+- Long press opens one dedicated edit window.
+- Name and category are edited together.
+- Nothing is saved until Save is pressed.
+- New category is requested only after explicitly pressing New category…
+- Removes the old native prompt + asynchronous category-picker sequence that behaved inconsistently on iPhone.
+- The same editor is used from Saved Sets and from the linked Current Set name.
+- Based on v1.39; Current Set Undo and delayed deletion unchanged.

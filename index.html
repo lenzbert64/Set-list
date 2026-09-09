@@ -200,12 +200,27 @@ button, input, select, textarea, summary, .row, .setrow, .handle, .title, .tab {
 }
 .setrow.pending-delete .remove{color:#ff6b6b;border-color:#d84a4a}
 .setrow.pending-delete .handle{pointer-events:none;opacity:.45}
+
+.savedEditOverlay{
+  position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,.58);
+  display:flex;align-items:center;justify-content:center;padding:20px;
+}
+.savedEditOverlay[hidden]{display:none}
+.savedEditDialog{
+  width:min(430px,100%);background:var(--card);border:1px solid var(--border);
+  border-radius:18px;padding:16px;box-shadow:0 18px 60px rgba(0,0,0,.35);
+}
+.savedEditTitle{font-size:22px;font-weight:800;margin:2px 0 14px}
+.savedEditDialog label{display:block;font-size:13px;color:var(--muted);margin:10px 0 5px}
+.savedEditDialog input,.savedEditDialog select{width:100%}
+.savedEditActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.savedEditNewCat{width:100%;margin-top:8px}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="header">
-    <div><h1>Set List</h1><div class="version">Version 1.39</div></div>
+    <div><h1>Set List</h1><div class="version">Version 1.40</div></div>
   </div>
 
   <div class="tabs">
@@ -679,32 +694,107 @@ function renderSet(){
   host.appendChild(row);
  });
 }
-const editingSavedSetIds=new Set();
+let savedSetBeingEditedId=null;
 
-async function editSavedSet(index){
- const x=saved[index];if(!x)return false;
- if(editingSavedSetIds.has(x.id))return false;
- editingSavedSetIds.add(x.id);
- try{
- const name=prompt("Saved set name:",x.name);if(name===null)return false;
- const cleanName=name.trim();if(!cleanName){alert("Saved set name cannot be empty.");return false}
+function openSavedSetEditor(index){
+ const x=saved[index];
+ if(!x)return;
 
- const picked=await pickCategory(savedCategories,x.category||"Uncategorized",{newPrompt:"New Saved Sets category name:"});
- if(!picked)return false;
- let category=savedCategories.find(c=>c.toLowerCase()===picked.category.toLowerCase());
+ const overlay=$("savedEditOverlay");
+ const nameInput=$("savedEditName");
+ const categorySelect=$("savedEditCategory");
+
+ savedSetBeingEditedId=x.id;
+ nameInput.value=x.name||"";
+ categorySelect.innerHTML="";
+
+ savedCategories.forEach(cat=>{
+  const o=document.createElement("option");
+  o.value=cat;o.textContent=cat;
+  categorySelect.appendChild(o);
+ });
+
+ const currentCategory=x.category||"Uncategorized";
+ if(![...categorySelect.options].some(o=>o.value===currentCategory)){
+  const o=document.createElement("option");
+  o.value=currentCategory;o.textContent=currentCategory;
+  categorySelect.appendChild(o);
+ }
+ categorySelect.value=currentCategory;
+
+ overlay.hidden=false;
+ setTimeout(()=>{nameInput.focus();nameInput.select()},50);
+}
+
+function closeSavedSetEditor(){
+ $("savedEditOverlay").hidden=true;
+ savedSetBeingEditedId=null;
+}
+
+$("savedEditCancel").onclick=closeSavedSetEditor;
+$("savedEditOverlay").onclick=e=>{
+ if(e.target===$("savedEditOverlay"))closeSavedSetEditor();
+};
+
+$("savedEditNewCategory").onclick=()=>{
+ const name=prompt("New Saved Sets category name:");
+ if(name===null)return;
+ const clean=name.trim();
+ if(!clean){alert("Category name cannot be empty.");return}
+
+ let category=savedCategories.find(c=>c.toLowerCase()===clean.toLowerCase());
+ if(!category){
+  category=clean;
+  savedCategories.push(category);
+  persist();
+  refreshCategoryControls();
+ }
+
+ const select=$("savedEditCategory");
+ if(![...select.options].some(o=>o.value===category)){
+  const o=document.createElement("option");
+  o.value=category;o.textContent=category;
+  select.appendChild(o);
+ }
+ select.value=category;
+};
+
+$("savedEditSave").onclick=()=>{
+ if(!savedSetBeingEditedId)return;
+
+ const x=saved.find(s=>s.id===savedSetBeingEditedId);
+ if(!x){closeSavedSetEditor();return}
+
+ const cleanName=$("savedEditName").value.trim();
+ if(!cleanName){
+  alert("Saved set name cannot be empty.");
+  $("savedEditName").focus();
+  return;
+ }
+
+ const category=$("savedEditCategory").value||"Uncategorized";
 
  rememberSavedForUndo();
- if(!category){savedCategories.push(picked.category);category=picked.category}
- x.name=cleanName;x.category=category;
+ x.name=cleanName;
+ x.category=category;
 
- if(currentSavedId===x.id){
-  currentSetName=cleanName;
+ if(currentSavedId===x.id)currentSetName=cleanName;
+
+ persist();
+ refreshCategoryControls();
+ closeSavedSetEditor();
+ renderAll();
+};
+
+$("savedEditName").addEventListener("keydown",e=>{
+ if(e.key==="Enter"){
+  e.preventDefault();
+  $("savedEditSave").click();
+ }else if(e.key==="Escape"){
+  closeSavedSetEditor();
  }
- persist();refreshCategoryControls();renderAll();return true;
- }finally{
-  editingSavedSetIds.delete(x.id);
- }
-}
+});
+
 
 function renderSaved(){
  const host=$("saved");host.innerHTML="";
@@ -730,7 +820,7 @@ function renderSaved(){
 
   bindLongPressAction(title,()=>{
    suppressOpenUntil=Date.now()+900;
-   void editSavedSet(i);
+   openSavedSetEditor(i);
   });
 
   row.querySelector(".share").onclick=async()=>{
@@ -853,7 +943,7 @@ $("bulkAdd").onclick=()=>{
   if(!currentSavedId)return;
   const index=saved.findIndex(x=>x.id===currentSavedId);
   if(index<0)return;
-  void editSavedSet(index);
+  openSavedSetEditor(index);
  };
  el.addEventListener("touchstart",e=>{
   moved=false;
@@ -999,6 +1089,21 @@ if("serviceWorker" in navigator){
 }
 if("caches" in window)caches.keys().then(keys=>Promise.all(keys.map(k=>caches.delete(k)))).catch(()=>{});
 </script>
+
+<div id="savedEditOverlay" class="savedEditOverlay" hidden>
+  <div class="savedEditDialog" role="dialog" aria-modal="true" aria-labelledby="savedEditHeading">
+    <div id="savedEditHeading" class="savedEditTitle">Edit Saved Set</div>
+    <label for="savedEditName">Set name</label>
+    <input id="savedEditName" type="text" autocomplete="off">
+    <label for="savedEditCategory">Category</label>
+    <select id="savedEditCategory"></select>
+    <button id="savedEditNewCategory" class="btn savedEditNewCat" type="button">New category…</button>
+    <div class="savedEditActions">
+      <button id="savedEditCancel" class="btn" type="button">Cancel</button>
+      <button id="savedEditSave" class="btn primary" type="button">Save</button>
+    </div>
+  </div>
+</div>
 
 <div id="categoryPicker" class="pickerOverlay" hidden>
   <div class="pickerDialog" role="dialog" aria-modal="true" aria-labelledby="pickerTitle">

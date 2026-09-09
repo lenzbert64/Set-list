@@ -54,7 +54,8 @@ textarea{width:100%;min-height:120px;resize:vertical}
 .backup{margin-top:28px}
 #undoSet{display:block;width:100%;margin:0 0 8px 0}
 #clearSet{display:block;width:100%;margin:0 0 8px 0}
-#updateSet{display:block;width:100%}
+#updateSet{display:block;width:100%;margin:0 0 8px 0}
+#shareSet{display:block;width:100%}
 #undoSet:disabled,#updateSet:disabled{opacity:.42}
 .holdhint{font-size:11px;color:#8a8f96;margin-top:4px}
 
@@ -147,7 +148,7 @@ button, input, select, textarea, summary, .row, .setrow, .handle, .title, .tab {
 <body>
 <div class="wrap">
   <div class="header">
-    <div><h1>Set List</h1><div class="version">Version 1.29</div></div>
+    <div><h1>Set List</h1><div class="version">Version 1.30</div></div>
   </div>
 
   <div class="tabs">
@@ -200,6 +201,7 @@ button, input, select, textarea, summary, .row, .setrow, .handle, .title, .tab {
       <button id="undoSet" class="btn" type="button" disabled>Undo last change</button>
       <button id="clearSet" class="btn" type="button">Clear current set</button>
       <button id="updateSet" class="btn" type="button" disabled>Update current set</button>
+      <button id="shareSet" class="btn" type="button">Share / Copy set list</button>
     </div>
     <div class="card">
       <div class="section">Save current set</div>
@@ -395,6 +397,13 @@ function createSavedCategory(){
  if(existing)return existing;
  rememberSavedForUndo();
  savedCategories.push(clean);persist();refreshCategoryControls();return clean;
+}
+
+function currentSetPlainText(){
+ const total=main.reduce((n,x)=>n+(byId(x.id)?.duration||0),0);
+ const title=currentSetName||"Set List";
+ const lines=main.map((x,i)=>`${i+1}. ${byId(x.id)?.title||"Unknown song"}`);
+ return `${title}\n${main.length} songs · Total ${fmt(total)}\n\n${lines.join("\n")}`;
 }
 
 function summary(){
@@ -737,6 +746,35 @@ $("undoSet").onclick=()=>{
  undoMain=null;
  persist();renderAll();
 };
+$("shareSet").onclick=async()=>{
+ if(!main.length){alert("Current Set is empty.");return}
+ const text=currentSetPlainText();
+ try{
+  if(navigator.share){
+   await navigator.share({title:currentSetName||"Set List",text});
+   return;
+  }
+ }catch(err){
+  if(err && err.name==="AbortError")return;
+ }
+ try{
+  if(navigator.clipboard && navigator.clipboard.writeText){
+   await navigator.clipboard.writeText(text);
+   alert("Set list copied to clipboard.");
+   return;
+  }
+ }catch(err){}
+ const ta=document.createElement("textarea");
+ ta.value=text;
+ ta.style.position="fixed";
+ ta.style.opacity="0";
+ document.body.appendChild(ta);
+ ta.focus();ta.select();
+ const ok=document.execCommand("copy");
+ ta.remove();
+ alert(ok?"Set list copied to clipboard.":"Could not copy the set list.");
+};
+
 $("updateSet").onclick=()=>{
  if(!currentSavedId)return;
  const index=saved.findIndex(x=>x.id===currentSavedId);

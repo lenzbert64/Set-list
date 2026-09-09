@@ -1,11 +1,12 @@
-Set List PWA v1.29
+Set List PWA v1.30
 
-Current Set update:
-- Added “Update current set” directly below “Clear current set”.
-- It is enabled only when Current Set is linked to an existing Saved Set.
-- Pressing it asks for confirmation before overwriting that Saved Set's song contents and order.
-- Saved Set name and category are unchanged.
-- Saved Sets Undo can revert the update.
-- “Save current set” below remains Save As and creates a new Saved Set.
-- All v1.28 data and backups remain compatible.
+Share / Copy:
+- Added “Share / Copy set list” directly below “Update current set”.
+- Uses the native iPhone/iPad share sheet when available.
+- Falls back to copying plain text to the clipboard.
+- Shared text contains:
+  1) saved/current set name (or “Set List” if unnamed)
+  2) song count and total duration
+  3) numbered song list without individual song durations
+- No other v1.29 behavior changed.
 - Caching remains disabled during development.

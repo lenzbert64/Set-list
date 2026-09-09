@@ -94,18 +94,25 @@ button, input, select, textarea, summary, .row, .setrow, .handle, .title, .tab {
 .setNameStats{margin-top:8px}
 .setNameStats .statbar{font-weight:700}
 
-/* Current Set: keep the time/count bar visible while scrolling. */
+/* Current Set: only the time/count bar stays visible while scrolling. */
 #panel-set > .stickyStats:first-child{
   position:sticky;
   top:0;
   z-index:20;
-  margin-bottom:6px;
-  background:var(--bg);
+  margin:0;
+  padding:6px 0;
 }
-/* Compact spacing between Total and saved-set name, matching Repertoire rhythm. */
-#panel-set .setNameStats{
-  margin-top:0;
-  margin-bottom:8px;
+
+/* The saved-set name scrolls normally and sits compactly under Total. */
+#panel-set > .setNameStats{
+  position:static !important;
+  top:auto !important;
+  z-index:auto;
+  margin:0 0 8px 0;
+  padding:0;
+  background:transparent;
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
 }
 
 </style>
@@ -113,7 +120,7 @@ button, input, select, textarea, summary, .row, .setrow, .handle, .title, .tab {
 <body>
 <div class="wrap">
   <div class="header">
-    <div><h1>Set List</h1><div class="version">Version 1.22</div></div>
+    <div><h1>Set List</h1><div class="version">Version 1.23</div></div>
   </div>
 
   <div class="tabs">

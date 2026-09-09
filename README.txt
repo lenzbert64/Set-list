@@ -1,12 +1,15 @@
-Set List PWA v1.32
+Set List PWA v1.33
 
-Compact rows fix:
-- v1.31 did not visibly reduce song-row height because its padding was effectively unchanged and new minimum heights prevented further shrinking.
-- Repertoire rows now use 3 px vertical padding.
-- Current Set rows now use 3 px vertical padding.
-- Saved Sets rows now use 3 px vertical padding.
-- +/- and drag controls are slightly shorter while remaining comfortably tappable.
-- Share / Copy in Saved Sets remains unchanged.
-
-All v1.31 data and functionality remain compatible.
-Caching remains disabled during development.
+Song keys:
+- Added an optional Key field to each repertoire song.
+- Key appears as a muted, fixed-width column immediately before the controls in Repertoire and Current Set.
+- It does not add vertical padding or minimum row height; existing title wrapping is preserved.
+- Long-press song editing now includes Key (optional).
+- Add Song includes a Key field.
+- Add songs as a list accepts both:
+  Title — 3:42
+  Title — 3:42 — Am
+- Existing songs automatically behave as having a blank key until edited.
+- Key belongs to the repertoire song, so changing it updates every Current/Saved Set that references that song.
+- Share / Copy remains intentionally unchanged and exports song titles without durations or keys.
+All v1.32 data remains compatible.

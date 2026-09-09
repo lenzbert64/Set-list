@@ -1,16 +1,12 @@
-Set List PWA v1.31
+Set List PWA v1.32
 
-Saved Sets:
-- Replaced Duplicate with Share / Copy in the same position.
-- Share / Copy sends the selected saved set as plain text:
-  set name, song count, total time, then numbered song titles without individual durations.
-- Delete remains at the far right.
-- Duplicate removed because Save As already covers that workflow.
+Compact rows fix:
+- v1.31 did not visibly reduce song-row height because its padding was effectively unchanged and new minimum heights prevented further shrinking.
+- Repertoire rows now use 3 px vertical padding.
+- Current Set rows now use 3 px vertical padding.
+- Saved Sets rows now use 3 px vertical padding.
+- +/- and drag controls are slightly shorter while remaining comfortably tappable.
+- Share / Copy in Saved Sets remains unchanged.
 
-Interface density:
-- Reduced vertical height/padding of song rows in Repertoire and Current Set.
-- Reduced vertical height/padding of Saved Set rows.
-- Compactened controls slightly while preserving touch usability.
-
-All v1.30 data and functionality remain compatible.
+All v1.31 data and functionality remain compatible.
 Caching remains disabled during development.

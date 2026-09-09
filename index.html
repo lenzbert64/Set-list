@@ -144,35 +144,39 @@ button, input, select, textarea, summary, .row, .setrow, .handle, .title, .tab {
 
 .currentSetNameEditable{cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 
-/* v1.31 compact-density pass. */
+/* v1.32 genuinely compact row density. */
 .row{
-  min-height:54px;
-  padding:7px 0;
+  min-height:0;
+  padding:3px 0;
 }
 .setrow{
-  min-height:60px;
-  padding:7px 0;
+  min-height:0;
+  padding:3px 0;
 }
 .savedrow{
-  padding:5px 0;
-  min-height:52px;
+  min-height:0;
+  padding:3px 0;
 }
 .row .title,.setrow .title,.savedrow .title{
   line-height:1.08;
 }
 .row .meta,.setrow .meta,.savedrow .meta{
-  margin-top:2px;
-  line-height:1.08;
+  margin-top:1px;
+  line-height:1.05;
+}
+.toggle,.remove{
+  min-height:36px;
+  height:36px;
 }
 .handle{
-  min-height:38px;
-}
-.remove{
-  min-height:44px;
+  min-height:34px;
+  height:34px;
+  line-height:34px;
 }
 .savedmini{
-  min-height:32px;
-  padding:3px 7px;
+  min-height:30px;
+  height:30px;
+  padding:2px 7px;
 }
 
 </style>
@@ -180,7 +184,7 @@ button, input, select, textarea, summary, .row, .setrow, .handle, .title, .tab {
 <body>
 <div class="wrap">
   <div class="header">
-    <div><h1>Set List</h1><div class="version">Version 1.31</div></div>
+    <div><h1>Set List</h1><div class="version">Version 1.32</div></div>
   </div>
 
   <div class="tabs">

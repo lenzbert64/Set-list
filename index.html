@@ -139,12 +139,14 @@ button, input, select, textarea, summary, .row, .setrow, .handle, .title, .tab {
 .pickerOption.selected{font-weight:800}
 .pickerCancel{width:100%;margin-top:12px}
 
+
+.currentSetNameEditable{cursor:pointer;touch-action:manipulation}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="header">
-    <div><h1>Set List</h1><div class="version">Version 1.25</div></div>
+    <div><h1>Set List</h1><div class="version">Version 1.27</div></div>
   </div>
 
   <div class="tabs">
@@ -189,7 +191,9 @@ button, input, select, textarea, summary, .row, .setrow, .handle, .title, .tab {
 
   <section id="panel-set" class="panel">
     <div class="stickyStats"><div class="statbar"><span id="count">0</span> songs · Total <span id="total">0:00</span></div></div>
-    <div id="currentSetNameBar" class="stickyStats setNameStats" hidden><div class="statbar" id="currentSetName"></div></div>
+    <div id="currentSetNameBar" class="stickyStats setNameStats" hidden>
+      <div class="statbar currentSetNameEditable" id="currentSetName" title="Press and hold to edit saved set"></div>
+    </div>
     <div class="card"><div id="main"></div></div>
     <div class="card">
       <button id="undoSet" class="btn" type="button" disabled>Undo last change</button>
@@ -259,11 +263,13 @@ if(oldEncore.length){
  oldEncore.forEach(x=>{if(!ids.has(x.id)){main.push({id:x.id});ids.add(x.id)}});
  oldEncore=[];
 }
-let saved=JSON.parse(localStorage.getItem("setlist_saved")||"[]").map(x=>({
+let saved=JSON.parse(localStorage.getItem("setlist_saved")||"[]").map((x,i)=>({
+ id:x.id||("set_"+Date.now()+"_"+i),
  name:x.name,
  category:(x.category||"Uncategorized").trim()||"Uncategorized",
  main:[...(x.main||[]),...(x.encore||[])].filter((v,i,a)=>a.findIndex(y=>y.id===v.id)===i)
 }));
+let currentSavedId=localStorage.getItem("setlist_current_saved_id")||"";
 let savedCategories=JSON.parse(localStorage.getItem("setlist_saved_categories")||"null");
 if(!Array.isArray(savedCategories)){
  savedCategories=uniqueClean(["Uncategorized",...saved.map(x=>x.category)]);
@@ -272,7 +278,7 @@ if(!Array.isArray(savedCategories)){
 }
 
 let undoMain=null;
-function rememberMainForUndo(){undoMain={main:clone(main),name:currentSetName};updateUndoButton()}
+function rememberMainForUndo(){undoMain={main:clone(main),name:currentSetName,savedId:currentSavedId};updateUndoButton()}
 function updateUndoButton(){const b=$("undoSet");if(b)b.disabled=!undoMain}
 
 let undoSaved=null;
@@ -290,9 +296,10 @@ function persist(){
  localStorage.setItem("setlist_rep_categories",JSON.stringify(repCategories));
  localStorage.setItem("setlist_main",JSON.stringify(main.map(x=>({id:x.id}))));
  localStorage.setItem("setlist_current_name",currentSetName);
+ localStorage.setItem("setlist_current_saved_id",currentSavedId);
  localStorage.setItem("setlist_encore","[]");
  localStorage.setItem("setlist_saved_categories",JSON.stringify(savedCategories));
- localStorage.setItem("setlist_saved",JSON.stringify(saved.map(x=>({name:x.name,category:x.category,main:x.main,encore:[]}))));
+ localStorage.setItem("setlist_saved",JSON.stringify(saved.map(x=>({id:x.id,name:x.name,category:x.category,main:x.main,encore:[]}))));
 }
 const byId=id=>songs.find(s=>s.id===id);
 const inSet=id=>main.some(x=>x.id===id);
@@ -352,10 +359,10 @@ function fillCategorySelect(select,categories,{includeAll=false,includeNew=false
 
 function refreshCategoryControls(){
  fillCategorySelect($("filter"),repCategories,{includeAll:true,includeNew:true});
- fillCategorySelect($("newProject"),repCategories);
- fillCategorySelect($("bulkProject"),repCategories);
+ fillCategorySelect($("newProject"),repCategories,{includeNew:true});
+ fillCategorySelect($("bulkProject"),repCategories,{includeNew:true});
  fillCategorySelect($("savedFilter"),savedCategories,{includeAll:true,includeNew:true});
- fillCategorySelect($("setCategory"),savedCategories);
+ fillCategorySelect($("setCategory"),savedCategories,{includeNew:true});
 }
 
 function createRepCategory(){
@@ -553,11 +560,13 @@ async function editSavedSet(index){
  if(!picked)return false;
  let category=savedCategories.find(c=>c.toLowerCase()===picked.category.toLowerCase());
 
- const oldName=x.name;
  rememberSavedForUndo();
  if(!category){savedCategories.push(picked.category);category=picked.category}
  x.name=cleanName;x.category=category;
- if(currentSetName===oldName)currentSetName=cleanName;
+
+ if(currentSavedId===x.id){
+  currentSetName=cleanName;
+ }
  persist();refreshCategoryControls();renderAll();return true;
 }
 
@@ -577,7 +586,7 @@ function renderSaved(){
   let suppressOpenUntil=0;
   const openSet=()=>{
    if(Date.now()<suppressOpenUntil)return;
-   rememberMainForUndo();main=clone(x.main);currentSetName=x.name;persist();switchTab("set");renderAll();
+   rememberMainForUndo();main=clone(x.main);currentSetName=x.name;currentSavedId=x.id;persist();switchTab("set");renderAll();
   };
   const open=row.querySelector(".savedopen");
   open.onclick=openSet;
@@ -590,13 +599,16 @@ function renderSaved(){
 
   row.querySelector(".copy").onclick=()=>{
    rememberSavedForUndo();
-   saved.push({name:x.name+" copy",category:x.category,main:clone(x.main)});
+   saved.push({id:"set_"+Date.now()+"_"+Math.random().toString(36).slice(2,8),name:x.name+" copy",category:x.category,main:clone(x.main)});
    persist();renderSaved();updateSavedUndoButton();
   };
   row.querySelector(".del").onclick=()=>{
    if(confirm("Delete this saved set?")){
     rememberSavedForUndo();
-    saved.splice(i,1);persist();renderSaved();updateSavedUndoButton();
+    const deletedId=saved[i].id;
+    saved.splice(i,1);
+    if(currentSavedId===deletedId)currentSavedId="";
+    persist();renderAll();
    }
   };
   host.appendChild(row);
@@ -626,6 +638,26 @@ $("savedFilter").onchange=()=>{
  }
  renderSaved();updateSavedUndoButton();
 };
+$("setCategory").onchange=()=>{
+ if($("setCategory").value!==NEW_CATEGORY)return;
+ const cat=createSavedCategory();
+ refreshCategoryControls();
+ $("setCategory").value=cat||"Uncategorized";
+};
+$("newProject").onchange=()=>{
+ if($("newProject").value!==NEW_CATEGORY)return;
+ const cat=createRepCategory();
+ refreshCategoryControls();
+ $("newProject").value=cat||repCategories[0]||"";
+};
+$("bulkProject").onchange=()=>{
+ if($("bulkProject").value!==NEW_CATEGORY)return;
+ const cat=createRepCategory();
+ refreshCategoryControls();
+ $("bulkProject").value=cat||repCategories[0]||"";
+};
+
+
 
 $("addForm").onsubmit=e=>{
  e.preventDefault();
@@ -653,6 +685,13 @@ $("bulkAdd").onclick=()=>{
  $("bulkResult").textContent=skipped.length?`Added: ${added}. Unrecognized lines: ${skipped.join(", ")}.`:`Songs added: ${added}.`;
 };
 
+bindLongPressAction($("currentSetName"),()=>{
+ if(!currentSavedId)return;
+ const index=saved.findIndex(x=>x.id===currentSavedId);
+ if(index<0)return;
+ void editSavedSet(index);
+});
+
 $("undoSaved").onclick=()=>{
  if(!undoSaved)return;
  saved=clone(undoSaved.saved);
@@ -665,6 +704,7 @@ $("undoSet").onclick=()=>{
  if(!undoMain)return;
  main=clone(undoMain.main);
  currentSetName=undoMain.name||"";
+ currentSavedId=undoMain.savedId||"";
  undoMain=null;
  persist();renderAll();
 };
@@ -672,22 +712,28 @@ $("clearSet").onclick=()=>{
  if(!main.length)return;
  if(!confirm("Clear the current set?"))return;
  rememberMainForUndo();
- main=[];currentSetName="";persist();renderAll();
+ main=[];currentSetName="";currentSavedId="";persist();renderAll();
 };
 $("saveSet").onclick=()=>{
  const name=$("setName").value.trim();if(!name)return;
- const category=$("setCategory").value||"Uncategorized";
- const existing=saved.findIndex(x=>x.name.toLowerCase()===name.toLowerCase());
- const obj={name,category,main:clone(main)};
+ let category=$("setCategory").value||"Uncategorized";
+ if(category===NEW_CATEGORY){
+  const cat=createSavedCategory();
+  if(!cat)return;
+  category=cat;
+ }
  rememberSavedForUndo();
- if(existing>=0)saved[existing]=obj;else saved.push(obj);
+ const obj={id:"set_"+Date.now()+"_"+Math.random().toString(36).slice(2,8),name,category,main:clone(main)};
+ saved.push(obj);
  currentSetName=name;
- $("setName").value="";persist();renderAll();
+ currentSavedId=obj.id;
+ $("setName").value="";
+ persist();refreshCategoryControls();renderAll();
 };
 
 $("exportBackup").onclick=async()=>{
  try{
-  const data={app:"Set List",version:3,exportedAt:new Date().toISOString(),songs,repCategories,main,currentSetName,encore:[],savedCategories,saved:saved.map(x=>({name:x.name,category:x.category,main:x.main,encore:[]}))};
+  const data={app:"Set List",version:4,exportedAt:new Date().toISOString(),songs,repCategories,main,currentSetName,currentSavedId,encore:[],savedCategories,saved:saved.map(x=>({id:x.id,name:x.name,category:x.category,main:x.main,encore:[]}))};
   const json=JSON.stringify(data,null,2);
   const filename="Set_List_Backup_"+new Date().toISOString().slice(0,10)+".json";
   const file=new File([json],filename,{type:"application/json"});
@@ -711,8 +757,9 @@ $("backupFile").onchange=async e=>{
   repCategories=Array.isArray(data.repCategories)?uniqueClean([...data.repCategories,...songs.map(s=>s.project)]):uniqueClean(["MessAge","Браво",...songs.map(s=>s.project)]);
   undoMain=null;undoSaved=null;
   currentSetName=data.currentSetName||"";
+  currentSavedId=data.currentSavedId||"";
   main=[...(data.main||[]),...(data.encore||[])].filter((v,i,a)=>a.findIndex(y=>y.id===v.id)===i).map(x=>({id:x.id}));
-  saved=data.saved.map(x=>({name:x.name,category:(x.category||"Uncategorized").trim()||"Uncategorized",main:[...(x.main||[]),...(x.encore||[])].filter((v,i,a)=>a.findIndex(y=>y.id===v.id)===i).map(y=>({id:y.id}))}));
+  saved=data.saved.map((x,i)=>({id:x.id||("set_"+Date.now()+"_"+i),name:x.name,category:(x.category||"Uncategorized").trim()||"Uncategorized",main:[...(x.main||[]),...(x.encore||[])].filter((v,i,a)=>a.findIndex(y=>y.id===v.id)===i).map(y=>({id:y.id}))}));
   savedCategories=Array.isArray(data.savedCategories)?uniqueClean(["Uncategorized",...data.savedCategories,...saved.map(x=>x.category)]):uniqueClean(["Uncategorized",...saved.map(x=>x.category)]);
   persist();refreshCategoryControls();renderAll();alert("Backup restored.");
  }catch(err){alert("Could not read the backup file.")}

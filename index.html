@@ -192,12 +192,20 @@ button, input, select, textarea, summary, .row, .setrow, .handle, .title, .tab {
   min-width:0;
 }
 
+
+.setrow.pending-delete{
+ position:relative;z-index:1;
+ box-shadow:inset 0 0 0 1px #d84a4a;
+ border-radius:8px;
+}
+.setrow.pending-delete .remove{color:#ff6b6b;border-color:#d84a4a}
+.setrow.pending-delete .handle{pointer-events:none;opacity:.45}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="header">
-    <div><h1>Set List</h1><div class="version">Version 1.34</div></div>
+    <div><h1>Set List</h1><div class="version">Version 1.35</div></div>
   </div>
 
   <div class="tabs">
@@ -336,8 +344,12 @@ if(!Array.isArray(savedCategories)){
 }
 
 let undoMain=null;
-function rememberMainForUndo(){undoMain={main:clone(main),name:currentSetName,savedId:currentSavedId};updateUndoButton()}
-function updateUndoButton(){const b=$("undoSet");if(b)b.disabled=!undoMain}
+function rememberMainForUndo(){
+ undoMain.push({main:clone(main),name:currentSetName,savedId:currentSavedId});
+ if(undoMain.length>MAX_MAIN_UNDO)undoMain.shift();
+ updateUndoButton();
+}
+function updateUndoButton(){const b=$("undoSet");if(b)b.disabled=undoMain.length===0}
 function updateCurrentSetButton(){
  const b=$("updateSet");
  if(!b)return;
@@ -614,7 +626,25 @@ function renderSet(){
   row.querySelector(".title").textContent=s.title;
   row.querySelector(".duration").textContent=fmt(s.duration);
   row.querySelector(".songkey").textContent=s.key||"";
-  row.querySelector(".remove").onclick=()=>{rememberMainForUndo();main=main.filter(x=>x.id!==s.id);persist();renderAll()};
+  row.querySelector(".remove").onclick=()=>{
+   const existing=pendingDeletes.get(s.id);
+   if(existing){
+    clearTimeout(existing.timer);
+    pendingDeletes.delete(s.id);
+    row.classList.remove("pending-delete");
+    return;
+   }
+   row.classList.add("pending-delete");
+   const timer=setTimeout(()=>{
+    pendingDeletes.delete(s.id);
+    const pos=main.findIndex(x=>x.id===s.id);
+    if(pos<0)return;
+    rememberMainForUndo();
+    main.splice(pos,1);
+    persist();renderAll();
+   },1000);
+   pendingDeletes.set(s.id,{timer,row});
+  };
   const handle=row.querySelector(".handle");
   enableHandleDrag(handle,row,host,()=>{
    const ids=[...host.querySelectorAll(".setrow")].map(r=>r.dataset.id);
@@ -660,7 +690,7 @@ function renderSaved(){
   let suppressOpenUntil=0;
   const openSet=()=>{
    if(Date.now()<suppressOpenUntil)return;
-   rememberMainForUndo();main=clone(x.main);currentSetName=x.name;currentSavedId=x.id;persist();switchTab("set");renderAll();
+   cancelPendingDeletes();rememberMainForUndo();main=clone(x.main);currentSetName=x.name;currentSavedId=x.id;persist();switchTab("set");renderAll();
   };
   const open=row.querySelector(".savedopen");
   open.onclick=openSet;
@@ -818,11 +848,12 @@ $("undoSaved").onclick=()=>{
 };
 
 $("undoSet").onclick=()=>{
- if(!undoMain)return;
- main=clone(undoMain.main);
- currentSetName=undoMain.name||"";
- currentSavedId=undoMain.savedId||"";
- undoMain=null;
+ cancelPendingDeletes();
+ if(!undoMain.length)return;
+ const state=undoMain.pop();
+ main=clone(state.main);
+ currentSetName=state.name||"";
+ currentSavedId=state.savedId||"";
  persist();renderAll();
 };
 $("shareSet").onclick=async()=>{
@@ -866,6 +897,7 @@ $("updateSet").onclick=()=>{
 };
 
 $("clearSet").onclick=()=>{
+ cancelPendingDeletes();
  if(!main.length)return;
  if(!confirm("Clear the current set?"))return;
  rememberMainForUndo();

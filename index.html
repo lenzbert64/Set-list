@@ -129,12 +129,22 @@ button, input, select, textarea, summary, .row, .setrow, .handle, .title, .tab {
  .savedSavebar #saveSet{grid-column:2;grid-row:1/3}
 }
 
+
+.pickerOverlay{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.58);display:flex;align-items:center;justify-content:center;padding:20px}
+.pickerOverlay[hidden]{display:none}
+.pickerDialog{width:min(430px,100%);max-height:80vh;overflow:auto;background:var(--card);border:1px solid var(--border);border-radius:18px;padding:16px;box-shadow:0 18px 60px rgba(0,0,0,.35)}
+.pickerTitle{font-size:22px;font-weight:800;margin:2px 0 12px}
+.pickerOptions{display:grid;gap:8px}
+.pickerOption{width:100%;text-align:left;min-height:46px}
+.pickerOption.selected{font-weight:800}
+.pickerCancel{width:100%;margin-top:12px}
+
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="header">
-    <div><h1>Set List</h1><div class="version">Version 1.24</div></div>
+    <div><h1>Set List</h1><div class="version">Version 1.25</div></div>
   </div>
 
   <div class="tabs">
@@ -289,6 +299,39 @@ const inSet=id=>main.some(x=>x.id===id);
 
 const NEW_CATEGORY="__new_category__";
 
+function pickCategory(categories,current,{allowNew=true,newPrompt="New category name:"}={}){
+ return new Promise(resolve=>{
+  const overlay=$("categoryPicker"),options=$("pickerOptions");
+  options.innerHTML="";
+  $("pickerTitle").textContent="Category";
+  const close=value=>{overlay.hidden=true;resolve(value)};
+  categories.forEach(cat=>{
+   const b=document.createElement("button");
+   b.type="button";b.className="btn pickerOption"+(cat===current?" selected":"");
+   b.textContent=(cat===current?"✓ ":"")+cat;
+   b.onclick=()=>close({category:cat,isNew:false});
+   options.appendChild(b);
+  });
+  if(allowNew){
+   const b=document.createElement("button");
+   b.type="button";b.className="btn pickerOption";
+   b.textContent="＋ New category…";
+   b.onclick=()=>{
+    overlay.hidden=true;
+    const name=prompt(newPrompt);
+    if(name===null){resolve(null);return}
+    const clean=name.trim();
+    if(!clean){alert("Category name cannot be empty.");resolve(null);return}
+    resolve({category:clean,isNew:true});
+   };
+   options.appendChild(b);
+  }
+  $("pickerCancel").onclick=()=>close(null);
+  overlay.onclick=e=>{if(e.target===overlay)close(null)};
+  overlay.hidden=false;
+ });
+}
+
 function fillCategorySelect(select,categories,{includeAll=false,includeNew=false,selected=null}={}){
  const prev=selected!==null?selected:select.value;
  select.innerHTML="";
@@ -345,7 +388,7 @@ function summary(){
  $("currentSetName").textContent=currentSetName;
  $("currentSetNameBar").hidden=!currentSetName;
 }
-function editSong(id){
+async function editSong(id){
  const s=byId(id); if(!s)return;
  const title=prompt("Song title:",s.title); if(title===null)return;
  const cleanTitle=title.trim(); if(!cleanTitle){alert("Song title cannot be empty.");return}
@@ -353,11 +396,12 @@ function editSong(id){
  const secText=prompt("Seconds (0–59):",String(s.duration%60)); if(secText===null)return;
  const min=Number(minText),sec=Number(secText);
  if(!Number.isInteger(min)||min<0||!Number.isInteger(sec)||sec<0||sec>59){alert("Invalid duration.");return}
- const projectText=prompt("Category:",s.project); if(projectText===null)return;
- const cleanProject=projectText.trim();
- if(!cleanProject){alert("Category cannot be empty.");return}
- let project=repCategories.find(x=>x.toLowerCase()===cleanProject.toLowerCase());
- if(!project){repCategories.push(cleanProject);project=cleanProject}
+
+ const picked=await pickCategory(repCategories,s.project,{newPrompt:"New Repertoire category name:"});
+ if(!picked)return;
+ let project=repCategories.find(x=>x.toLowerCase()===picked.category.toLowerCase());
+ if(!project){repCategories.push(picked.category);project=picked.category}
+
  s.title=cleanTitle;s.duration=min*60+sec;s.project=project;
  persist();refreshCategoryControls();renderAll();
 }
@@ -500,16 +544,18 @@ function renderSet(){
   host.appendChild(row);
  });
 }
-function editSavedSet(index){
+async function editSavedSet(index){
  const x=saved[index];if(!x)return false;
  const name=prompt("Saved set name:",x.name);if(name===null)return false;
  const cleanName=name.trim();if(!cleanName){alert("Saved set name cannot be empty.");return false}
- const categoryText=prompt("Category:",x.category||"Uncategorized");if(categoryText===null)return false;
- const cleanCategory=categoryText.trim();if(!cleanCategory){alert("Category cannot be empty.");return false}
- let category=savedCategories.find(c=>c.toLowerCase()===cleanCategory.toLowerCase());
+
+ const picked=await pickCategory(savedCategories,x.category||"Uncategorized",{newPrompt:"New Saved Sets category name:"});
+ if(!picked)return false;
+ let category=savedCategories.find(c=>c.toLowerCase()===picked.category.toLowerCase());
+
  const oldName=x.name;
  rememberSavedForUndo();
- if(!category){savedCategories.push(cleanCategory);category=cleanCategory}
+ if(!category){savedCategories.push(picked.category);category=picked.category}
  x.name=cleanName;x.category=category;
  if(currentSetName===oldName)currentSetName=cleanName;
  persist();refreshCategoryControls();renderAll();return true;
@@ -539,7 +585,7 @@ function renderSaved(){
 
   bindLongPressAction(title,()=>{
    suppressOpenUntil=Date.now()+900;
-   editSavedSet(i);
+   void editSavedSet(i);
   });
 
   row.querySelector(".copy").onclick=()=>{
@@ -680,5 +726,14 @@ if("serviceWorker" in navigator){
 }
 if("caches" in window)caches.keys().then(keys=>Promise.all(keys.map(k=>caches.delete(k)))).catch(()=>{});
 </script>
+
+<div id="categoryPicker" class="pickerOverlay" hidden>
+  <div class="pickerDialog" role="dialog" aria-modal="true" aria-labelledby="pickerTitle">
+    <div id="pickerTitle" class="pickerTitle">Category</div>
+    <div id="pickerOptions" class="pickerOptions"></div>
+    <button id="pickerCancel" class="btn pickerCancel" type="button">Cancel</button>
+  </div>
+</div>
+
 </body>
 </html>

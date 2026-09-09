@@ -1,4 +1,4 @@
-// Set List v1.38 — caching disabled during development.
+// Set List v1.39 — caching disabled during development.
 self.addEventListener("install",()=>self.skipWaiting());
 self.addEventListener("activate",event=>{
  event.waitUntil(

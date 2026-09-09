@@ -1,8 +1,9 @@
-Set List PWA v1.38
+Set List PWA v1.39
 
-Bug fix:
-- Fixed Current Set Undo.
-- Root cause in v1.37: Undo called cancelPendingDeletes(), but that function was missing, causing a JavaScript ReferenceError before the undo state could be restored.
-- Added cancelPendingDeletes() properly.
-- Clear Current Set and opening a Saved Set also now safely cancel pending 1-second deletions.
-- 10-step Undo and delayed red-outline deletion remain unchanged.
+Saved Sets rename fix:
+- Fixed duplicate long-press firing on iPhone/Safari.
+- A single long press can now trigger the Saved Set editor only once.
+- Added a per-set edit lock so two rename/category edit flows cannot overlap.
+- This prevents names from apparently not saving and prevents an unexpected second category/new-category prompt.
+- Current Set 10-step Undo and delayed deletion remain unchanged.
+- Based on v1.38 stable.

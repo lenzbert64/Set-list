@@ -205,7 +205,7 @@ button, input, select, textarea, summary, .row, .setrow, .handle, .title, .tab {
 <body>
 <div class="wrap">
   <div class="header">
-    <div><h1>Set List</h1><div class="version">Version 1.38</div></div>
+    <div><h1>Set List</h1><div class="version">Version 1.39</div></div>
   </div>
 
   <div class="tabs">
@@ -521,14 +521,30 @@ function bindLongPress(el,id){
  el.addEventListener("contextmenu",e=>{e.preventDefault();editSong(id)});
 }
 function bindLongPressAction(el,action){
- let timer=null,moved=false;
- const start=()=>{moved=false;timer=setTimeout(()=>{timer=null;if(!moved)action()},600)};
- const cancel=()=>{if(timer){clearTimeout(timer);timer=null}};
+ let timer=null,moved=false,fired=false;
+ const runOnce=()=>{
+  if(fired||moved)return;
+  fired=true;
+  action();
+ };
+ const start=()=>{
+  moved=false;
+  fired=false;
+  if(timer)clearTimeout(timer);
+  timer=setTimeout(()=>{timer=null;runOnce()},600);
+ };
+ const cancelTimer=()=>{
+  if(timer){clearTimeout(timer);timer=null}
+ };
  el.addEventListener("touchstart",start,{passive:true});
- el.addEventListener("touchmove",()=>{moved=true;cancel()},{passive:true});
- el.addEventListener("touchend",cancel,{passive:true});
- el.addEventListener("touchcancel",cancel,{passive:true});
- el.addEventListener("contextmenu",e=>{e.preventDefault();action()});
+ el.addEventListener("touchmove",()=>{moved=true;cancelTimer()},{passive:true});
+ el.addEventListener("touchend",()=>{cancelTimer();setTimeout(()=>{fired=false},700)},{passive:true});
+ el.addEventListener("touchcancel",()=>{cancelTimer();fired=false},{passive:true});
+ el.addEventListener("contextmenu",e=>{
+  e.preventDefault();
+  cancelTimer();
+  runOnce();
+ });
 }
 function reorderVisibleSongs(visibleIds){
  const visibleSet=new Set(visibleIds),slots=[];
@@ -663,8 +679,13 @@ function renderSet(){
   host.appendChild(row);
  });
 }
+const editingSavedSetIds=new Set();
+
 async function editSavedSet(index){
  const x=saved[index];if(!x)return false;
+ if(editingSavedSetIds.has(x.id))return false;
+ editingSavedSetIds.add(x.id);
+ try{
  const name=prompt("Saved set name:",x.name);if(name===null)return false;
  const cleanName=name.trim();if(!cleanName){alert("Saved set name cannot be empty.");return false}
 
@@ -680,6 +701,9 @@ async function editSavedSet(index){
   currentSetName=cleanName;
  }
  persist();refreshCategoryControls();renderAll();return true;
+ }finally{
+  editingSavedSetIds.delete(x.id);
+ }
 }
 
 function renderSaved(){

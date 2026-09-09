@@ -1,10 +1,9 @@
-Set List PWA v1.40
+Set List PWA v1.41
 
-Saved Sets editor rebuilt:
-- Long press opens one dedicated edit window.
-- Name and category are edited together.
-- Nothing is saved until Save is pressed.
-- New category is requested only after explicitly pressing New category…
-- Removes the old native prompt + asynchronous category-picker sequence that behaved inconsistently on iPhone.
-- The same editor is used from Saved Sets and from the linked Current Set name.
-- Based on v1.39; Current Set Undo and delayed deletion unchanged.
+Critical v1.40 startup fix:
+- Fixed the blank/empty app and non-working tabs.
+- Root cause: the new Saved Set editor elements were inserted after the main JavaScript, while the script tried to attach handlers to them immediately.
+- The Saved Set editor DOM is now loaded before the script initializes.
+- No repertoire/localStorage data is changed.
+- The v1.40 Saved Set rename editor remains otherwise unchanged.
+- Current Set 10-step Undo and delayed deletion remain unchanged.

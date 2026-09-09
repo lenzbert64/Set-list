@@ -220,7 +220,7 @@ button, input, select, textarea, summary, .row, .setrow, .handle, .title, .tab {
 <body>
 <div class="wrap">
   <div class="header">
-    <div><h1>Set List</h1><div class="version">Version 1.40</div></div>
+    <div><h1>Set List</h1><div class="version">Version 1.41</div></div>
   </div>
 
   <div class="tabs">
@@ -309,6 +309,22 @@ button, input, select, textarea, summary, .row, .setrow, .handle, .title, .tab {
     </div>
   </section>
 </div>
+
+<div id="savedEditOverlay" class="savedEditOverlay" hidden>
+  <div class="savedEditDialog" role="dialog" aria-modal="true" aria-labelledby="savedEditHeading">
+    <div id="savedEditHeading" class="savedEditTitle">Edit Saved Set</div>
+    <label for="savedEditName">Set name</label>
+    <input id="savedEditName" type="text" autocomplete="off">
+    <label for="savedEditCategory">Category</label>
+    <select id="savedEditCategory"></select>
+    <button id="savedEditNewCategory" class="btn savedEditNewCat" type="button">New category…</button>
+    <div class="savedEditActions">
+      <button id="savedEditCancel" class="btn" type="button">Cancel</button>
+      <button id="savedEditSave" class="btn primary" type="button">Save</button>
+    </div>
+  </div>
+</div>
+
 
 <script>
 const starter=[
@@ -1089,21 +1105,6 @@ if("serviceWorker" in navigator){
 }
 if("caches" in window)caches.keys().then(keys=>Promise.all(keys.map(k=>caches.delete(k)))).catch(()=>{});
 </script>
-
-<div id="savedEditOverlay" class="savedEditOverlay" hidden>
-  <div class="savedEditDialog" role="dialog" aria-modal="true" aria-labelledby="savedEditHeading">
-    <div id="savedEditHeading" class="savedEditTitle">Edit Saved Set</div>
-    <label for="savedEditName">Set name</label>
-    <input id="savedEditName" type="text" autocomplete="off">
-    <label for="savedEditCategory">Category</label>
-    <select id="savedEditCategory"></select>
-    <button id="savedEditNewCategory" class="btn savedEditNewCat" type="button">New category…</button>
-    <div class="savedEditActions">
-      <button id="savedEditCancel" class="btn" type="button">Cancel</button>
-      <button id="savedEditSave" class="btn primary" type="button">Save</button>
-    </div>
-  </div>
-</div>
 
 <div id="categoryPicker" class="pickerOverlay" hidden>
   <div class="pickerDialog" role="dialog" aria-modal="true" aria-labelledby="pickerTitle">

@@ -317,12 +317,50 @@ input, textarea {
 }
 .undoRedoRow button{width:100%}
 
+
+/* v1.48: swipe right on a Repertoire row to reveal Delete on the left. */
+.repSwipeWrap{
+  position:relative;
+  overflow:hidden;
+  border-bottom:1px solid rgba(127,127,127,.18);
+}
+.repSwipeWrap .row{
+  position:relative;
+  z-index:2;
+  background:var(--bg,#fff);
+  border-bottom:0 !important;
+  transform:translateX(0);
+  transition:transform .18s ease;
+  will-change:transform;
+}
+@media (prefers-color-scheme:dark){
+  .repSwipeWrap .row{background:#1d1f22}
+}
+.repSwipeDelete{
+  position:absolute;
+  left:0;top:0;bottom:0;
+  width:92px;
+  border:0;
+  border-radius:0;
+  margin:0;
+  padding:0 12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font:inherit;
+  font-weight:700;
+  background:#d9363e;
+  color:#fff;
+  z-index:1;
+}
+.repSwipeWrap.open .row{transform:translateX(92px)}
+
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="header">
-    <div><h1>Set List</h1><div class="version">Version 1.47</div></div>
+    <div><h1>Set List</h1><div class="version">Version 1.48</div></div>
   </div>
 
   <div class="tabs">
@@ -434,7 +472,7 @@ input, textarea {
 
 <div id="songDeleteOverlay" class="savedEditOverlay" hidden>
   <div class="savedEditDialog" role="dialog" aria-modal="true">
-    <div class="savedEditTitle">Delete song?</div>
+    <div id="songDeleteTitle" class="savedEditTitle">Delete song?</div>
     <div id="songDeleteText" class="hint" style="margin:10px 0 14px"></div>
     <div class="undoRedoRow">
       <button id="songDeleteCancel" type="button">Cancel</button>
@@ -545,7 +583,7 @@ const inSet=id=>main.some(x=>x.id===id);
 
 const NEW_CATEGORY="__new_category__";
 
-function pickCategory(categories,current,{allowNew=true,newPrompt="New category name:",allowDelete=false}={}){
+function pickCategory(categories,current,{allowNew=true,newPrompt="New category name:"}={}){
  return new Promise(resolve=>{
   const overlay=$("categoryPicker"),options=$("pickerOptions");
   options.innerHTML="";
@@ -558,13 +596,6 @@ function pickCategory(categories,current,{allowNew=true,newPrompt="New category 
    b.onclick=()=>close({category:cat,isNew:false});
    options.appendChild(b);
   });
-  if(allowDelete){
-   const d=document.createElement("button");
-   d.type="button";d.className="btn pickerOption";
-   d.textContent="Delete song…";
-   d.onclick=()=>close("__DELETE_SONG__");
-   options.appendChild(d);
-  }
   if(allowNew){
    const b=document.createElement("button");
    b.type="button";b.className="btn pickerOption";
@@ -652,7 +683,8 @@ function summary(){
 function confirmSongDelete(song){
  return new Promise(resolve=>{
   const ov=$("songDeleteOverlay");
-  $("songDeleteText").textContent=`Remove “${song.title}” from Repertoire, Current Set and all Saved Sets?`;
+  $("songDeleteTitle").textContent=`Delete “${song.title}”?`;
+  $("songDeleteText").textContent="This song will be removed from Repertoire, Current Set and all Saved Sets.";
   ov.hidden=false;
   const close=value=>{
    ov.hidden=true;
@@ -686,11 +718,7 @@ async function editSong(id){
  const keyText=prompt("Key (optional):",s.key||""); if(keyText===null)return;
  const key=keyText.trim();
 
- const picked=await pickCategory(repCategories,s.project,{newPrompt:"New Repertoire category name:",allowDelete:true});
- if(picked==="__DELETE_SONG__"){
-  if(await confirmSongDelete(s))deleteSongEverywhere(s.id);
-  return;
- }
+ const picked=await pickCategory(repCategories,s.project,{newPrompt:"New Repertoire category name:"});
  if(!picked)return;
  let project=repCategories.find(x=>x.toLowerCase()===picked.category.toLowerCase());
  if(!project){repCategories.push(picked.category);project=picked.category}
@@ -808,7 +836,77 @@ function enableHandleDrag(handle,row,host,onFinish,onStart){
   onFinish();
  });
 }
+
+let openRepSwipe=null;
+
+function closeOpenRepSwipe(){
+ if(openRepSwipe){
+  openRepSwipe.classList.remove("open");
+  openRepSwipe=null;
+ }
+}
+
+function bindRepSwipe(wrap,row,song){
+ const MAX=92,THRESHOLD=34;
+ let startX=0,startY=0,lastX=0,tracking=false,dragging=false,wasOpen=false;
+
+ row.addEventListener("touchstart",e=>{
+  if(e.touches.length!==1)return;
+  if(openRepSwipe && openRepSwipe!==wrap)closeOpenRepSwipe();
+  startX=lastX=e.touches[0].clientX;
+  startY=e.touches[0].clientY;
+  wasOpen=wrap.classList.contains("open");
+  tracking=true;dragging=false;
+  row.style.transition="none";
+ },{passive:true});
+
+ row.addEventListener("touchmove",e=>{
+  if(!tracking || e.touches.length!==1)return;
+  lastX=e.touches[0].clientX;
+  const dx=lastX-startX;
+  const dy=e.touches[0].clientY-startY;
+
+  if(Math.abs(dy)>Math.abs(dx) && Math.abs(dy)>8){
+   tracking=false;
+   row.style.transition="";
+   row.style.transform="";
+   return;
+  }
+
+  if(Math.abs(dx)>6)dragging=true;
+  let pos=(wasOpen?MAX:0)+dx;
+  pos=Math.max(0,Math.min(MAX,pos));
+  row.style.transform=`translateX(${pos}px)`;
+  if(Math.abs(dx)>8)e.preventDefault();
+ },{passive:false});
+
+ row.addEventListener("touchend",()=>{
+  if(!tracking){
+   row.style.transition="";
+   row.style.transform="";
+   return;
+  }
+  const dx=lastX-startX;
+  row.style.transition="";
+  row.style.transform="";
+
+  const shouldOpen = wasOpen ? dx>-THRESHOLD : dx>THRESHOLD;
+  wrap.classList.toggle("open",shouldOpen);
+  openRepSwipe=shouldOpen?wrap:null;
+  tracking=false;
+ },{passive:true});
+
+ row.addEventListener("click",e=>{
+  if(wrap.classList.contains("open") && !dragging){
+   e.preventDefault();
+   e.stopPropagation();
+   closeOpenRepSwipe();
+  }
+ },true);
+}
+
 function renderRep(){
+ openRepSwipe=null;
  const q=$("search").value.trim().toLowerCase(),f=$("filter").value,host=$("rep");
  host.innerHTML="";
  const list=songs.filter(s=>(f==="All"||s.project===f)&&s.title.toLowerCase().includes(q));
@@ -830,7 +928,23 @@ function renderRep(){
     const visibleIds=[...host.querySelectorAll(".row")].map(r=>r.dataset.id);
     reorderVisibleSongs(visibleIds);
   });
-  host.appendChild(row);
+  const swipeWrap=document.createElement("div");
+  swipeWrap.className="repSwipeWrap";
+
+  const del=document.createElement("button");
+  del.type="button";
+  del.className="repSwipeDelete";
+  del.textContent="Delete";
+  del.onclick=async e=>{
+   e.stopPropagation();
+   closeOpenRepSwipe();
+   if(await confirmSongDelete(s))deleteSongEverywhere(s.id);
+  };
+
+  swipeWrap.appendChild(del);
+  swipeWrap.appendChild(row);
+  host.appendChild(swipeWrap);
+  bindRepSwipe(swipeWrap,row,s);
  });
 }
 function renderSet(){

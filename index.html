@@ -426,12 +426,34 @@ input, textarea {
 .repSwipeWrap.open .repSwipeDelete,
 .repSwipeWrap.swiping .repSwipeDelete{visibility:visible}
 
+
+/* v1.56: explicit category management button; reliable on iOS native selects */
+.categoryFilterGroup{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 36px;
+  gap:5px;
+  align-items:center;
+  min-width:0;
+}
+.categoryFilterGroup:has(.categoryManageBtn[hidden]){
+  grid-template-columns:minmax(0,1fr);
+}
+.categoryManageBtn{
+  width:36px;
+  min-width:36px;
+  height:36px;
+  min-height:36px;
+  padding:0;
+  font-size:20px;
+  line-height:1;
+}
+
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="header">
-    <div><h1>Set List</h1><div class="version">Version 1.55</div></div>
+    <div><h1>Set List</h1><div class="version">Version 1.56</div></div>
   </div>
 
   <div class="tabs">
@@ -444,11 +466,11 @@ input, textarea {
     <div class="card">
       <div class="toolbar">
         <input id="search" type="search" placeholder="Search songs...">
-        <select id="filter"></select>
+        <div class="categoryFilterGroup"><select id="filter"></select><button id="repCategoryManage" class="btn categoryManageBtn" type="button" aria-label="Manage category" hidden>⋯</button></div>
       </div>
       <div class="stickyStats"><div class="statbar"><span id="repCount">0</span> songs · Total <span id="repTotal">0:00</span></div></div>
       <div id="rep"></div>
-      <div class="holdhint">Press and hold a song title to edit. Press and hold the selected category to manage it.</div>
+      <div class="holdhint">Press and hold a song title to edit.</div>
     </div>
 
     <details class="card addCard">
@@ -504,10 +526,10 @@ input, textarea {
     <div class="card">
       <div class="savedHeader">
         <div class="section">Saved Sets</div>
-        <select id="savedFilter"></select>
+        <div class="categoryFilterGroup"><select id="savedFilter"></select><button id="savedCategoryManage" class="btn categoryManageBtn" type="button" aria-label="Manage category" hidden>⋯</button></div>
       </div>
       <div id="saved"></div>
-      <div class="holdhint">Press and hold a saved set name to edit it. Press and hold the selected category to manage it.</div>
+      <div class="holdhint">Press and hold a saved set name to edit it.</div>
     </div>
     <div class="card">
       <button id="undoSaved" class="btn" type="button" disabled>Undo last change</button>
@@ -740,6 +762,16 @@ function refreshCategoryControls(){
  fillCategorySelect($("bulkProject"),repCategories,{includeNew:true});
  fillCategorySelect($("savedFilter"),savedCategories,{includeAll:true,includeNew:true});
  fillCategorySelect($("setCategory"),savedCategories,{includeNew:true});
+ updateCategoryManageButtons();
+}
+
+function categoryCanBeManaged(value){
+ return !!value && value!=="All" && value!==NEW_CATEGORY && value!==SYSTEM_CATEGORY;
+}
+function updateCategoryManageButtons(){
+ const rep=$("repCategoryManage"),sav=$("savedCategoryManage");
+ if(rep)rep.hidden=!categoryCanBeManaged($("filter").value);
+ if(sav)sav.hidden=!categoryCanBeManaged($("savedFilter").value);
 }
 
 
@@ -1500,12 +1532,22 @@ function renderAll(){renderRep();renderSet();renderSaved();summary();updateUndoR
 
 document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
 $("search").oninput=renderRep;
+$("repCategoryManage").onclick=()=>{
+ const value=$("filter").value;
+ if(categoryCanBeManaged(value))openCategoryManage("rep",value);
+};
+$("savedCategoryManage").onclick=()=>{
+ const value=$("savedFilter").value;
+ if(categoryCanBeManaged(value))openCategoryManage("saved",value);
+};
+
 $("filter").onchange=()=>{
  if($("filter").value===NEW_CATEGORY){
   const cat=createRepCategory();
   refreshCategoryControls();
   $("filter").value=cat||"All";
  }
+ updateCategoryManageButtons();
  renderRep();
 };
 $("savedFilter").onchange=()=>{
@@ -1514,6 +1556,7 @@ $("savedFilter").onchange=()=>{
   refreshCategoryControls();
   $("savedFilter").value=cat||"All";
  }
+ updateCategoryManageButtons();
  renderSaved();updateSavedUndoButton();
 };
 $("setCategory").onchange=()=>{
@@ -1536,9 +1579,6 @@ $("bulkProject").onchange=()=>{
 };
 
 
-
-bindCategoryLongPress($("filter"),"rep");
-bindCategoryLongPress($("savedFilter"),"saved");
 
 $("addForm").onsubmit=e=>{
  e.preventDefault();

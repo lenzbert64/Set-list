@@ -1,9 +1,8 @@
-Set List PWA v1.43
+Set List PWA v1.44
 
-Changes:
-- Long press on a song title in Current Set now opens the same song editor used in Repertoire.
-- Editing title/duration/key/category updates the same repertoire song everywhere it is used.
-- Disabled Safari double-tap zoom on app chrome and empty areas.
-- Inputs, textareas and selects remain exempt so editing stays usable.
-- Saved Sets editor from v1.42 is unchanged.
-- 10-step Undo and delayed red-outline deletion are unchanged.
+Song editor category window refinement:
+- Category picker is now one solid opaque dialog.
+- Category choices are grouped into one continuous block with no gaps between rows.
+- The underlying set list no longer shows through between category choices.
+- Dark mode uses an explicit opaque background as well.
+- All v1.43 functionality remains unchanged.

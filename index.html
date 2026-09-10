@@ -132,14 +132,52 @@ button, input, select, textarea, summary, .row, .setrow, .handle, .title, .tab {
 }
 
 
-.pickerOverlay{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.58);display:flex;align-items:center;justify-content:center;padding:20px}
+.pickerOverlay{
+  position:fixed;inset:0;z-index:1000;
+  background:rgba(0,0,0,.66);
+  display:flex;align-items:center;justify-content:center;
+  padding:20px;
+}
 .pickerOverlay[hidden]{display:none}
-.pickerDialog{width:min(430px,100%);max-height:80vh;overflow:auto;background:var(--card);border:1px solid var(--border);border-radius:18px;padding:16px;box-shadow:0 18px 60px rgba(0,0,0,.35)}
+.pickerDialog{
+  width:min(430px,100%);
+  max-height:80vh;
+  overflow:auto;
+  background:#fff;
+  color:#111;
+  border:1px solid #dadde1;
+  border-radius:18px;
+  padding:16px;
+  box-shadow:0 18px 60px rgba(0,0,0,.4);
+}
 .pickerTitle{font-size:22px;font-weight:800;margin:2px 0 12px}
-.pickerOptions{display:grid;gap:8px}
-.pickerOption{width:100%;text-align:left;min-height:46px}
+.pickerOptions{
+  display:block;
+  border:1px solid #cfd3d8;
+  border-radius:12px;
+  overflow:hidden;
+}
+.pickerOption{
+  width:100%;
+  min-height:46px;
+  text-align:left;
+  border:0;
+  border-radius:0;
+  border-bottom:1px solid #dfe2e6;
+  margin:0;
+}
+.pickerOption:last-child{border-bottom:0}
 .pickerOption.selected{font-weight:800}
-.pickerCancel{width:100%;margin-top:12px}
+.pickerCancel{width:100%;margin-top:10px}
+@media(prefers-color-scheme:dark){
+  .pickerDialog{
+    background:#1d1f22;
+    color:#f5f5f7;
+    border-color:#35383e;
+  }
+  .pickerOptions{border-color:#3a3e44}
+  .pickerOption{border-bottom-color:#35383e}
+}
 
 
 .currentSetNameEditable{cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
@@ -260,7 +298,7 @@ html,body,.card,.row,.setrow,.tabs,.tab,button{
 <body>
 <div class="wrap">
   <div class="header">
-    <div><h1>Set List</h1><div class="version">Version 1.43</div></div>
+    <div><h1>Set List</h1><div class="version">Version 1.44</div></div>
   </div>
 
   <div class="tabs">

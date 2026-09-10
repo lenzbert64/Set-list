@@ -453,7 +453,7 @@ input, textarea {
 <body>
 <div class="wrap">
   <div class="header">
-    <div><h1>Set List</h1><div class="version">Version 1.56</div></div>
+    <div><h1>Set List</h1><div class="version">Version 1.57</div></div>
   </div>
 
   <div class="tabs">
@@ -710,26 +710,31 @@ function pickCategory(categories,current,{allowNew=true,newPrompt="New category 
   const overlay=$("categoryPicker"),options=$("pickerOptions");
   options.innerHTML="";
   $("pickerTitle").textContent="Category";
+  const openedAt=Date.now();
+  const safeActivate=fn=>()=>{
+   if(Date.now()-openedAt<300)return;
+   fn();
+  };
   const close=value=>{overlay.hidden=true;resolve(value)};
   categories.forEach(cat=>{
    const b=document.createElement("button");
    b.type="button";b.className="btn pickerOption"+(cat===current?" selected":"");
    b.textContent=(cat===current?"✓ ":"")+cat;
-   b.onclick=()=>close({category:cat,isNew:false});
+   b.onclick=()=>safeActivate(()=>close({category:cat,isNew:false}));
    options.appendChild(b);
   });
   if(allowNew){
    const b=document.createElement("button");
    b.type="button";b.className="btn pickerOption";
    b.textContent="＋ New category…";
-   b.onclick=()=>{
+   b.onclick=()=>safeActivate(()=>{
     overlay.hidden=true;
     const name=prompt(newPrompt);
     if(name===null){resolve(null);return}
     const clean=name.trim();
     if(!clean){alert("Category name cannot be empty.");resolve(null);return}
     resolve({category:clean,isNew:true});
-   };
+   });
    options.appendChild(b);
   }
   $("pickerCancel").onclick=()=>close(null);
@@ -1263,7 +1268,9 @@ function renderRep(){
   btn.classList.toggle("inset",selected);
   btn.setAttribute("aria-label",selected?"Remove from Current Set":"Add to Current Set");
   btn.onclick=()=>toggleSet(s.id);
-  bindLongPress(title,s.id);
+  bindLongPressAction(title,()=>{
+   void editSong(s.id);
+  });
   enableHandleDrag(handle,row,host,()=>{
     const visibleIds=[...host.querySelectorAll(".row")].map(r=>r.dataset.id);
     reorderVisibleSongs(visibleIds);

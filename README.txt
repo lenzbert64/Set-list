@@ -1,9 +1,10 @@
-Set List PWA v1.41
+Set List PWA v1.42
 
-Critical v1.40 startup fix:
-- Fixed the blank/empty app and non-working tabs.
-- Root cause: the new Saved Set editor elements were inserted after the main JavaScript, while the script tried to attach handlers to them immediately.
-- The Saved Set editor DOM is now loaded before the script initializes.
-- No repertoire/localStorage data is changed.
-- The v1.40 Saved Set rename editor remains otherwise unchanged.
-- Current Set 10-step Undo and delayed deletion remain unchanged.
+Saved Sets editor UI refinement:
+- Editor is now one solid opaque block; Saved Set names no longer show through between sections.
+- Removed automatic focus and automatic full selection of the Set name.
+- Keyboard no longer opens immediately when the editor appears.
+- Added iOS VisualViewport handling so the editor follows the visible area when the keyboard is open.
+- Editor can scroll within the visible area, keeping Cancel / Save reachable.
+- No song/set data logic changed.
+- Current Set song-title editing remains unchanged: song editing is available by long press in Repertoire only.

@@ -202,25 +202,61 @@ button, input, select, textarea, summary, .row, .setrow, .handle, .title, .tab {
 .setrow.pending-delete .handle{pointer-events:none;opacity:.45}
 
 .savedEditOverlay{
-  position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,.58);
-  display:flex;align-items:center;justify-content:center;padding:20px;
+  position:fixed;
+  left:0;right:0;top:0;
+  height:100dvh;
+  z-index:1200;
+  background:rgba(0,0,0,.66);
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+  padding:calc(env(safe-area-inset-top) + 14px) 14px 14px;
+  overflow:auto;
 }
 .savedEditOverlay[hidden]{display:none}
 .savedEditDialog{
-  width:min(430px,100%);background:var(--card);border:1px solid var(--border);
-  border-radius:18px;padding:16px;box-shadow:0 18px 60px rgba(0,0,0,.35);
+  width:min(430px,100%);
+  max-height:calc(100dvh - env(safe-area-inset-top) - 28px);
+  overflow:auto;
+  background:#fff;
+  color:#111;
+  border:1px solid #dadde1;
+  border-radius:16px;
+  padding:14px;
+  box-shadow:0 18px 60px rgba(0,0,0,.45);
 }
-.savedEditTitle{font-size:22px;font-weight:800;margin:2px 0 14px}
-.savedEditDialog label{display:block;font-size:13px;color:var(--muted);margin:10px 0 5px}
-.savedEditDialog input,.savedEditDialog select{width:100%}
-.savedEditActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.savedEditTitle{font-size:20px;font-weight:800;margin:0 0 12px}
+.savedEditDialog label{
+  display:block;
+  font-size:12px;
+  color:#6c7179;
+  margin:9px 0 4px;
+}
+.savedEditDialog input,.savedEditDialog select{
+  width:100%;
+  margin:0;
+}
 .savedEditNewCat{width:100%;margin-top:8px}
+.savedEditActions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-top:12px;
+}
+@media(prefers-color-scheme:dark){
+  .savedEditDialog{
+    background:#1d1f22;
+    color:#f5f5f7;
+    border-color:#35383e;
+  }
+  .savedEditDialog label{color:#a8adb5}
+}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="header">
-    <div><h1>Set List</h1><div class="version">Version 1.41</div></div>
+    <div><h1>Set List</h1><div class="version">Version 1.42</div></div>
   </div>
 
   <div class="tabs">
@@ -739,12 +775,33 @@ function openSavedSetEditor(index){
  categorySelect.value=currentCategory;
 
  overlay.hidden=false;
- setTimeout(()=>{nameInput.focus();nameInput.select()},50);
+ nameInput.blur();
+ if(window.visualViewport)syncSavedEditorViewport();
+}
+
+function syncSavedEditorViewport(){
+ const overlay=$("savedEditOverlay");
+ if(!overlay || overlay.hidden)return;
+ const vv=window.visualViewport;
+ if(vv){
+  overlay.style.top=vv.offsetTop+"px";
+  overlay.style.height=vv.height+"px";
+ }else{
+  overlay.style.top="0px";
+  overlay.style.height="100dvh";
+ }
 }
 
 function closeSavedSetEditor(){
  $("savedEditOverlay").hidden=true;
+ $("savedEditOverlay").style.top="";
+ $("savedEditOverlay").style.height="";
  savedSetBeingEditedId=null;
+}
+
+if(window.visualViewport){
+ visualViewport.addEventListener("resize",syncSavedEditorViewport);
+ visualViewport.addEventListener("scroll",syncSavedEditorViewport);
 }
 
 $("savedEditCancel").onclick=closeSavedSetEditor;

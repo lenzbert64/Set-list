@@ -420,12 +420,18 @@ input, textarea {
   line-height:1;
 }
 
+
+/* v1.55: category management + iOS swipe-delete compositing guard */
+.repSwipeDelete{visibility:hidden}
+.repSwipeWrap.open .repSwipeDelete,
+.repSwipeWrap.swiping .repSwipeDelete{visibility:visible}
+
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="header">
-    <div><h1>Set List</h1><div class="version">Version 1.54</div></div>
+    <div><h1>Set List</h1><div class="version">Version 1.55</div></div>
   </div>
 
   <div class="tabs">
@@ -442,7 +448,7 @@ input, textarea {
       </div>
       <div class="stickyStats"><div class="statbar"><span id="repCount">0</span> songs · Total <span id="repTotal">0:00</span></div></div>
       <div id="rep"></div>
-      <div class="holdhint">Press and hold a song title to edit.</div>
+      <div class="holdhint">Press and hold a song title to edit. Press and hold the selected category to manage it.</div>
     </div>
 
     <details class="card addCard">
@@ -501,7 +507,7 @@ input, textarea {
         <select id="savedFilter"></select>
       </div>
       <div id="saved"></div>
-      <div class="holdhint">Press and hold a saved set name to rename it or change its category.</div>
+      <div class="holdhint">Press and hold a saved set name to edit it. Press and hold the selected category to manage it.</div>
     </div>
     <div class="card">
       <button id="undoSaved" class="btn" type="button" disabled>Undo last change</button>
@@ -547,6 +553,15 @@ input, textarea {
 </div>
 
 
+
+<div id="categoryManageOverlay" class="pickerOverlay" hidden>
+  <div class="pickerDialog" role="dialog" aria-modal="true" aria-labelledby="categoryManageTitle">
+    <div id="categoryManageTitle" class="pickerTitle">Category</div>
+    <div id="categoryManageOptions" class="pickerOptions"></div>
+    <button id="categoryManageCancel" type="button" class="btn pickerCancel">Cancel</button>
+  </div>
+</div>
+
 <div id="accidentalPicker" class="pickerOverlay" hidden>
   <div class="pickerDialog" role="dialog" aria-modal="true" aria-labelledby="accidentalPickerTitle">
     <div id="accidentalPickerTitle" class="pickerTitle">Accidental</div>
@@ -579,11 +594,18 @@ let songs=JSON.parse(localStorage.getItem("setlist_songs")||"null") ||
  starter.map((x,i)=>({id:"m"+i,title:x[0],duration:x[1]*60+x[2],project:"MessAge"}));
 
 const uniqueClean=arr=>[...new Set(arr.map(x=>(x||"").trim()).filter(Boolean))];
+const SYSTEM_CATEGORY="Uncategorised";
+const normalizeCategory=x=>{
+ const c=(x||"").trim();
+ if(!c || c.toLowerCase()==="uncategorized" || c.toLowerCase()==="uncategorised")return SYSTEM_CATEGORY;
+ return c;
+};
+songs=songs.map(s=>({...s,project:normalizeCategory(s.project)}));
 let repCategories=JSON.parse(localStorage.getItem("setlist_rep_categories")||"null");
 if(!Array.isArray(repCategories)){
- repCategories=uniqueClean(["MessAge","Браво",...songs.map(s=>s.project)]);
+ repCategories=uniqueClean([SYSTEM_CATEGORY,"MessAge","Браво",...songs.map(s=>s.project)]);
 }else{
- repCategories=uniqueClean([...repCategories,...songs.map(s=>s.project)]);
+ repCategories=uniqueClean([SYSTEM_CATEGORY,...repCategories.map(normalizeCategory),...songs.map(s=>s.project)]);
 }
 
 let main=JSON.parse(localStorage.getItem("setlist_main")||"[]");
@@ -597,7 +619,7 @@ if(oldEncore.length){
 let saved=JSON.parse(localStorage.getItem("setlist_saved")||"[]").map((x,i)=>({
  id:x.id||("set_"+Date.now()+"_"+i),
  name:x.name,
- category:(x.category||"Uncategorized").trim()||"Uncategorized",
+ category:normalizeCategory(x.category),
  main:[...(x.main||[]),...(x.encore||[])].filter((v,i,a)=>a.findIndex(y=>y.id===v.id)===i)
 }));
 let currentSavedId=localStorage.getItem("setlist_current_saved_id")||"";
@@ -607,9 +629,9 @@ if(!currentSavedId && currentSetName){
 }
 let savedCategories=JSON.parse(localStorage.getItem("setlist_saved_categories")||"null");
 if(!Array.isArray(savedCategories)){
- savedCategories=uniqueClean(["Uncategorized",...saved.map(x=>x.category)]);
+ savedCategories=uniqueClean([SYSTEM_CATEGORY,...saved.map(x=>x.category)]);
 }else{
- savedCategories=uniqueClean(["Uncategorized",...savedCategories,...saved.map(x=>x.category)]);
+ savedCategories=uniqueClean([SYSTEM_CATEGORY,...savedCategories.map(normalizeCategory),...saved.map(x=>x.category)]);
 }
 
 let undoMain=[];
@@ -720,11 +742,153 @@ function refreshCategoryControls(){
  fillCategorySelect($("setCategory"),savedCategories,{includeNew:true});
 }
 
+
+let categoryManageContext=null;
+
+function closeCategoryManage(){
+ $("categoryManageOverlay").hidden=true;
+ categoryManageContext=null;
+}
+
+function renameManagedCategory(kind,oldName){
+ const promptText=kind==="rep"?"Rename Repertoire category:":"Rename Saved Sets category:";
+ const name=prompt(promptText,oldName);
+ if(name===null)return;
+ const clean=name.trim();
+ if(!clean){alert("Category name cannot be empty.");return}
+ if(clean.toLowerCase()===SYSTEM_CATEGORY.toLowerCase()){
+  alert(`${SYSTEM_CATEGORY} is a system category and cannot be used as a custom category name.`);
+  return;
+ }
+ const categories=kind==="rep"?repCategories:savedCategories;
+ const duplicate=categories.find(c=>c.toLowerCase()===clean.toLowerCase() && c!==oldName);
+ if(duplicate){alert("A category with that name already exists.");return}
+
+ if(kind==="rep"){
+  repCategories=repCategories.map(c=>c===oldName?clean:c);
+  songs=songs.map(s=>s.project===oldName?{...s,project:clean}:s);
+ }else{
+  rememberSavedForUndo();
+  savedCategories=savedCategories.map(c=>c===oldName?clean:c);
+  saved=saved.map(x=>x.category===oldName?{...x,category:clean}:x);
+ }
+ persist();refreshCategoryControls();
+ const select=kind==="rep"?$("filter"):$("savedFilter");
+ select.value=clean;
+ closeCategoryManage();
+ renderAll();
+}
+
+function clearManagedCategory(kind,name){
+ const count=kind==="rep"
+  ? songs.filter(s=>s.project===name).length
+  : saved.filter(x=>x.category===name).length;
+ if(!count)return;
+ const noun=kind==="rep"?(count===1?"song":"songs"):(count===1?"saved set":"saved sets");
+ if(!confirm(`Move ${count} ${noun} from "${name}" to ${SYSTEM_CATEGORY}?`))return;
+
+ if(kind==="rep"){
+  songs=songs.map(s=>s.project===name?{...s,project:SYSTEM_CATEGORY}:s);
+ }else{
+  rememberSavedForUndo();
+  saved=saved.map(x=>x.category===name?{...x,category:SYSTEM_CATEGORY}:x);
+ }
+ persist();refreshCategoryControls();
+ const select=kind==="rep"?$("filter"):$("savedFilter");
+ select.value=name; // category remains, now empty
+ closeCategoryManage();
+ renderAll();
+}
+
+function deleteManagedCategory(kind,name){
+ const count=kind==="rep"
+  ? songs.filter(s=>s.project===name).length
+  : saved.filter(x=>x.category===name).length;
+ if(count){alert("Only an empty category can be deleted.");return}
+ if(!confirm(`Delete empty category "${name}"?`))return;
+
+ if(kind==="rep"){
+  repCategories=repCategories.filter(c=>c!==name);
+ }else{
+  rememberSavedForUndo();
+  savedCategories=savedCategories.filter(c=>c!==name);
+ }
+ persist();refreshCategoryControls();
+ const select=kind==="rep"?$("filter"):$("savedFilter");
+ select.value="All";
+ closeCategoryManage();
+ renderAll();
+}
+
+function openCategoryManage(kind,name){
+ if(!name || name==="All" || name===NEW_CATEGORY || name===SYSTEM_CATEGORY)return;
+ const categories=kind==="rep"?repCategories:savedCategories;
+ if(!categories.includes(name))return;
+
+ categoryManageContext={kind,name};
+ $("categoryManageTitle").textContent=name;
+ const options=$("categoryManageOptions");
+ options.innerHTML="";
+
+ const count=kind==="rep"
+  ? songs.filter(s=>s.project===name).length
+  : saved.filter(x=>x.category===name).length;
+
+ const rename=document.createElement("button");
+ rename.type="button";rename.className="btn pickerOption";rename.textContent="Rename category";
+ rename.onclick=()=>renameManagedCategory(kind,name);
+ options.appendChild(rename);
+
+ const action=document.createElement("button");
+ action.type="button";action.className="btn pickerOption";
+ if(count){
+  action.textContent="Clear entire category";
+  action.onclick=()=>clearManagedCategory(kind,name);
+ }else{
+  action.textContent="Delete category";
+  action.onclick=()=>deleteManagedCategory(kind,name);
+ }
+ options.appendChild(action);
+
+ $("categoryManageOverlay").hidden=false;
+}
+
+function bindCategoryLongPress(select,kind){
+ let timer=null,moved=false,fired=false;
+ const cancel=()=>{if(timer){clearTimeout(timer);timer=null}};
+ select.addEventListener("touchstart",()=>{
+  moved=false;fired=false;cancel();
+  const value=select.value;
+  if(!value || value==="All" || value===NEW_CATEGORY || value===SYSTEM_CATEGORY)return;
+  timer=setTimeout(()=>{
+   timer=null;
+   if(moved)return;
+   fired=true;
+   select.blur();
+   openCategoryManage(kind,value);
+  },650);
+ },{passive:true});
+ select.addEventListener("touchmove",()=>{moved=true;cancel()},{passive:true});
+ select.addEventListener("touchend",()=>{cancel();setTimeout(()=>{fired=false},500)},{passive:true});
+ select.addEventListener("touchcancel",cancel,{passive:true});
+ select.addEventListener("contextmenu",e=>{
+  const value=select.value;
+  if(value && value!=="All" && value!==NEW_CATEGORY && value!==SYSTEM_CATEGORY){
+   e.preventDefault();
+   openCategoryManage(kind,value);
+  }
+ });
+}
+
+$("categoryManageCancel").onclick=closeCategoryManage;
+$("categoryManageOverlay").onclick=e=>{if(e.target===$("categoryManageOverlay"))closeCategoryManage()};
+
 function createRepCategory(){
  const name=prompt("New Repertoire category name:");
  if(name===null)return null;
  const clean=name.trim();
  if(!clean){alert("Category name cannot be empty.");return null}
+ if(clean.toLowerCase()==="uncategorized" || clean.toLowerCase()==="uncategorised")return SYSTEM_CATEGORY;
  const existing=repCategories.find(x=>x.toLowerCase()===clean.toLowerCase());
  if(existing)return existing;
  repCategories.push(clean);persist();refreshCategoryControls();return clean;
@@ -735,6 +899,7 @@ function createSavedCategory(){
  if(name===null)return null;
  const clean=name.trim();
  if(!clean){alert("Category name cannot be empty.");return null}
+ if(clean.toLowerCase()==="uncategorized" || clean.toLowerCase()==="uncategorised")return SYSTEM_CATEGORY;
  const existing=savedCategories.find(x=>x.toLowerCase()===clean.toLowerCase());
  if(existing)return existing;
  rememberSavedForUndo();
@@ -951,7 +1116,10 @@ function bindRepSwipe(wrap,row,song){
    return;
   }
 
-  if(Math.abs(dx)>6)dragging=true;
+  if(Math.abs(dx)>6){
+   dragging=true;
+   if(Math.abs(dx)>Math.abs(dy))wrap.classList.add("swiping");
+  }
   let pos=(wasOpen?MAX:0)+dx;
   pos=Math.max(0,Math.min(MAX,pos));
   row.style.transform=`translateX(${pos}px)`;
@@ -962,6 +1130,7 @@ function bindRepSwipe(wrap,row,song){
   if(!tracking){
    row.style.transition="";
    row.style.transform="";
+   wrap.classList.remove("swiping");
    return;
   }
   const dx=lastX-startX;
@@ -970,6 +1139,7 @@ function bindRepSwipe(wrap,row,song){
 
   const shouldOpen = wasOpen ? dx>-THRESHOLD : dx>THRESHOLD;
   wrap.classList.toggle("open",shouldOpen);
+  wrap.classList.remove("swiping");
   openRepSwipe=shouldOpen?wrap:null;
   tracking=false;
  },{passive:true});
@@ -1149,7 +1319,7 @@ function openSavedSetEditor(index){
   categorySelect.appendChild(o);
  });
 
- const currentCategory=x.category||"Uncategorized";
+ const currentCategory=x.category||SYSTEM_CATEGORY;
  if(![...categorySelect.options].some(o=>o.value===currentCategory)){
   const o=document.createElement("option");
   o.value=currentCategory;o.textContent=currentCategory;
@@ -1198,7 +1368,9 @@ $("savedEditNewCategory").onclick=()=>{
  const clean=name.trim();
  if(!clean){alert("Category name cannot be empty.");return}
 
- let category=savedCategories.find(c=>c.toLowerCase()===clean.toLowerCase());
+ let category=(clean.toLowerCase()==="uncategorized" || clean.toLowerCase()==="uncategorised")
+  ? SYSTEM_CATEGORY
+  : savedCategories.find(c=>c.toLowerCase()===clean.toLowerCase());
  if(!category){
   category=clean;
   savedCategories.push(category);
@@ -1228,7 +1400,7 @@ $("savedEditSave").onclick=()=>{
   return;
  }
 
- const category=$("savedEditCategory").value||"Uncategorized";
+ const category=$("savedEditCategory").value||SYSTEM_CATEGORY;
 
  rememberSavedForUndo();
  x.name=cleanName;
@@ -1348,7 +1520,7 @@ $("setCategory").onchange=()=>{
  if($("setCategory").value!==NEW_CATEGORY)return;
  const cat=createSavedCategory();
  refreshCategoryControls();
- $("setCategory").value=cat||"Uncategorized";
+ $("setCategory").value=cat||SYSTEM_CATEGORY;
 };
 $("newProject").onchange=()=>{
  if($("newProject").value!==NEW_CATEGORY)return;
@@ -1364,6 +1536,9 @@ $("bulkProject").onchange=()=>{
 };
 
 
+
+bindCategoryLongPress($("filter"),"rep");
+bindCategoryLongPress($("savedFilter"),"saved");
 
 $("addForm").onsubmit=e=>{
  e.preventDefault();
@@ -1511,7 +1686,7 @@ $("clearSet").onclick=()=>{
 };
 $("saveSet").onclick=()=>{
  const name=$("setName").value.trim();if(!name)return;
- let category=$("setCategory").value||"Uncategorized";
+ let category=$("setCategory").value||SYSTEM_CATEGORY;
  if(category===NEW_CATEGORY){
   const cat=createSavedCategory();
   if(!cat)return;
@@ -1554,8 +1729,8 @@ $("backupFile").onchange=async e=>{
   currentSetName=data.currentSetName||"";
   currentSavedId=data.currentSavedId||"";
   main=[...(data.main||[]),...(data.encore||[])].filter((v,i,a)=>a.findIndex(y=>y.id===v.id)===i).map(x=>({id:x.id}));
-  saved=data.saved.map((x,i)=>({id:x.id||("set_"+Date.now()+"_"+i),name:x.name,category:(x.category||"Uncategorized").trim()||"Uncategorized",main:[...(x.main||[]),...(x.encore||[])].filter((v,i,a)=>a.findIndex(y=>y.id===v.id)===i).map(y=>({id:y.id}))}));
-  savedCategories=Array.isArray(data.savedCategories)?uniqueClean(["Uncategorized",...data.savedCategories,...saved.map(x=>x.category)]):uniqueClean(["Uncategorized",...saved.map(x=>x.category)]);
+  saved=data.saved.map((x,i)=>({id:x.id||("set_"+Date.now()+"_"+i),name:x.name,category:(x.category||SYSTEM_CATEGORY).trim()||SYSTEM_CATEGORY,main:[...(x.main||[]),...(x.encore||[])].filter((v,i,a)=>a.findIndex(y=>y.id===v.id)===i).map(y=>({id:y.id}))}));
+  savedCategories=Array.isArray(data.savedCategories)?uniqueClean([SYSTEM_CATEGORY,...data.savedCategories,...saved.map(x=>x.category)]):uniqueClean([SYSTEM_CATEGORY,...saved.map(x=>x.category)]);
   persist();refreshCategoryControls();renderAll();alert("Backup restored.");
  }catch(err){alert("Could not read the backup file.")}
  e.target.value="";

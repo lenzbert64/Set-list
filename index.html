@@ -355,12 +355,40 @@ input, textarea {
 }
 .repSwipeWrap.open .row{transform:translateX(92px)}
 
+
+/* v1.49: fixed key axis + separate accidental slot. */
+.songkey{
+  display:grid;
+  grid-template-columns:14px 10px;
+  justify-content:end;
+  align-items:center;
+  column-gap:0;
+  width:30px;
+  padding-right:3px;
+  box-sizing:border-box;
+  text-align:initial;
+}
+.keynote{
+  grid-column:1;
+  justify-self:center;
+  font-size:16px;
+  font-weight:500;
+  line-height:1;
+}
+.keyacc{
+  grid-column:2;
+  justify-self:start;
+  font-size:14px;
+  font-weight:500;
+  line-height:1;
+}
+
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="header">
-    <div><h1>Set List</h1><div class="version">Version 1.48</div></div>
+    <div><h1>Set List</h1><div class="version">Version 1.49</div></div>
   </div>
 
   <div class="tabs">
@@ -386,7 +414,7 @@ input, textarea {
         <input id="newTitle" type="text" placeholder="Title" required>
         <input id="newMin" type="number" min="0" max="99" inputmode="numeric" placeholder="min" required>
         <input id="newSec" type="number" min="0" max="59" inputmode="numeric" placeholder="sec" required>
-        <input id="newKey" type="text" maxlength="8" placeholder="Key" autocapitalize="characters">
+        <input id="newKey" type="text" maxlength="2" placeholder="Key" autocapitalize="characters">
         <select id="newProject"></select>
         <button class="btn primary add" type="submit">Add</button>
       </form>
@@ -394,12 +422,12 @@ input, textarea {
 
     <details class="card addCard">
       <summary>Add songs as a list</summary>
-      <textarea id="bulkText" placeholder="Song One — 3:42 — Am&#10;Song Two — 4:05 — E&#10;Song Three — 3:18"></textarea>
+      <textarea id="bulkText" placeholder="Song One — 3:42 — F#&#10;Song Two — 4:05 — Bb&#10;Song Three — 3:18"></textarea>
       <div class="bulkActions">
         <select id="bulkProject"></select>
         <button id="bulkAdd" class="btn primary" type="button">Add all</button>
       </div>
-      <div class="note">One song per line: Title — 3:42 — Am. Key is optional.</div>
+      <div class="note">One song per line: Title — 3:42 — F#. Key is optional.</div>
       <div id="bulkResult" class="note"></div>
     </details>
   </section>
@@ -496,6 +524,23 @@ function cancelPendingDeletes(){
  document.querySelectorAll(".setrow.pending-delete").forEach(row=>row.classList.remove("pending-delete"));
 }
 const $=id=>document.getElementById(id);
+
+function normalizeKey(raw){
+ let x=(raw||"").trim();
+ if(!x)return "";
+ x=x.replace(/♯/g,"#").replace(/♭/g,"b");
+ const m=x.match(/^([A-Ga-gHh])\s*([#b]?)/);
+ if(!m)return "";
+ return m[1].toUpperCase()+(m[2]||"");
+}
+function keyHTML(raw){
+ const k=normalizeKey(raw);
+ if(!k)return "";
+ const note=k.charAt(0);
+ const acc=k.slice(1)==="#"?"♯":k.slice(1)==="b"?"♭":"";
+ return `<span class="keynote">${note}</span><span class="keyacc">${acc}</span>`;
+}
+
 
 let songs=JSON.parse(localStorage.getItem("setlist_songs")||"null") ||
  starter.map((x,i)=>({id:"m"+i,title:x[0],duration:x[1]*60+x[2],project:"MessAge"}));
@@ -715,8 +760,9 @@ async function editSong(id){
  const secText=prompt("Seconds (0–59):",String(s.duration%60)); if(secText===null)return;
  const min=Number(minText),sec=Number(secText);
  if(!Number.isInteger(min)||min<0||!Number.isInteger(sec)||sec<0||sec>59){alert("Invalid duration.");return}
- const keyText=prompt("Key (optional):",s.key||""); if(keyText===null)return;
- const key=keyText.trim();
+ const keyText=prompt("Key (optional: A, F#, Bb):",normalizeKey(s.key)); if(keyText===null)return;
+ const key=normalizeKey(keyText);
+ if(keyText.trim() && !key){alert("Use a note A–G (or H) with optional # or b.");return}
 
  const picked=await pickCategory(repCategories,s.project,{newPrompt:"New Repertoire category name:"});
  if(!picked)return;
@@ -917,7 +963,7 @@ function renderRep(){
   const title=row.querySelector(".title"),btn=row.querySelector(".toggle"),handle=row.querySelector(".handle");
   title.textContent=s.title;
   row.querySelector(".duration").textContent=fmt(s.duration);
-  row.querySelector(".songkey").textContent=s.key||"";
+  row.querySelector(".songkey").innerHTML=keyHTML(s.key);
   const selected=inSet(s.id);
   btn.textContent=selected?"✓":"+";
   btn.classList.toggle("inset",selected);
@@ -957,7 +1003,7 @@ function renderSet(){
   row.querySelector(".num").textContent=i+1;
   row.querySelector(".title").textContent=s.title;
   row.querySelector(".duration").textContent=fmt(s.duration);
-  row.querySelector(".songkey").textContent=s.key||"";
+  row.querySelector(".songkey").innerHTML=keyHTML(s.key);
   bindLongPressAction(row.querySelector(".title"),()=>{
    void editSong(s.id);
   });
@@ -1228,7 +1274,7 @@ $("bulkProject").onchange=()=>{
 
 $("addForm").onsubmit=e=>{
  e.preventDefault();
- const title=$("newTitle").value.trim(),min=Number($("newMin").value),sec=Number($("newSec").value),key=$("newKey").value.trim();
+ const title=$("newTitle").value.trim(),min=Number($("newMin").value),sec=Number($("newSec").value),key=normalizeKey($("newKey").value);
  if(!title||!Number.isInteger(min)||!Number.isInteger(sec)||min<0||sec<0||sec>59)return;
  songs.push({id:"s"+Date.now(),title,duration:min*60+sec,key,project:$("newProject").value});
  $("newTitle").value="";$("newMin").value="";$("newSec").value="";$("newKey").value="";
@@ -1241,11 +1287,11 @@ $("bulkAdd").onclick=()=>{
  const lines=text.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
  let added=0;const skipped=[];
  lines.forEach((line,i)=>{
-  const m=line.match(/^(.*?)\s*(?:[—–-]\s*)?(\d{1,2}):([0-5]\d)(?:\s*[—–-]\s*([A-Ga-g](?:#|b)?(?:m|maj|min|sus|dim|aug)?\d*))?\s*$/);
+  const m=line.match(/^(.*?)\s*(?:[—–-]\s*)?(\d{1,2}):([0-5]\d)(?:\s*[—–-]\s*([A-Ga-gHh](?:#|b|♯|♭)?))?\s*$/);
   if(!m){skipped.push(i+1);return}
   const title=m[1].trim().replace(/[—–-]\s*$/,"").trim();
   if(!title){skipped.push(i+1);return}
-  const key=(m[4]||"").trim();
+  const key=normalizeKey(m[4]||"");
   songs.push({id:"s"+Date.now()+"_"+i+"_"+Math.random().toString(36).slice(2,7),title,duration:Number(m[2])*60+Number(m[3]),key,project});
   added++;
  });

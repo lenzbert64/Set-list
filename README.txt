@@ -1,8 +1,7 @@
-Set List PWA v1.44
+Set List PWA v1.45
 
-Song editor category window refinement:
-- Category picker is now one solid opaque dialog.
-- Category choices are grouped into one continuous block with no gaps between rows.
-- The underlying set list no longer shows through between category choices.
-- Dark mode uses an explicit opaque background as well.
-- All v1.43 functionality remains unchanged.
+Touch refinement:
+- Disabled accidental text selection and iOS text callout throughout the app interface.
+- Long presses that land slightly outside a song title no longer highlight surrounding interface text.
+- Text selection remains enabled inside input and textarea fields for normal editing.
+- All v1.44 functionality is unchanged.

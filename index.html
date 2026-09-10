@@ -293,12 +293,27 @@ button, input, select, textarea, summary, .row, .setrow, .handle, .title, .tab {
 html,body,.card,.row,.setrow,.tabs,.tab,button{
   touch-action:manipulation;
 }
+
+/* v1.45: app UI behaves like a native app — no accidental text selection. */
+body, .wrap, .tabs, .tab, .card, .row, .setrow, .savedrow,
+.title, .duration, .meta, .num, .songkey, .stat, .hint,
+button, label, summary {
+  -webkit-user-select:none;
+  user-select:none;
+  -webkit-touch-callout:none;
+}
+input, textarea {
+  -webkit-user-select:text;
+  user-select:text;
+  -webkit-touch-callout:default;
+}
+
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="header">
-    <div><h1>Set List</h1><div class="version">Version 1.44</div></div>
+    <div><h1>Set List</h1><div class="version">Version 1.45</div></div>
   </div>
 
   <div class="tabs">

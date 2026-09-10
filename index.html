@@ -356,102 +356,10 @@ input, textarea {
 .repSwipeWrap.open .row{transform:translateX(92px)}
 
 
-/* v1.49: fixed key axis + separate accidental slot. */
-.songkey{
-  display:grid;
-  grid-template-columns:14px 10px;
-  justify-content:end;
-  align-items:center;
-  column-gap:0;
-  width:30px;
-  padding-right:3px;
-  box-sizing:border-box;
-  text-align:initial;
-}
-.keynote{
-  grid-column:1;
-  justify-self:center;
-  font-size:16px;
-  font-weight:500;
-  line-height:1;
-}
-.keyacc{
-  grid-column:2;
-  justify-self:start;
-  font-size:14px;
-  font-weight:500;
-  line-height:1;
-}
-
-
-/* v1.50: v1.48 spacing restored; aligned note + accidental retained. */
-.songkey{
-  display:grid;
-  grid-template-columns:14px 8px;
-  justify-content:end;
-  align-items:center;
-  column-gap:0;
-  width:30px;
-  padding-right:0;
-  box-sizing:border-box;
-  text-align:initial;
-}
-.keynote{
-  grid-column:1;
-  justify-self:end;
-  font-size:16px;
-  font-weight:500;
-  line-height:1;
-}
-.keyacc{
-  grid-column:2;
-  justify-self:start;
-  font-size:13px;
-  font-weight:500;
-  line-height:1;
-  margin-left:1px;
-}
-
-
-/* v1.51 unified song editor */
-.songEditDialog{
-  width:min(92vw,420px);
-  max-height:calc(100dvh - 24px);
-  overflow:auto;
-}
-.songEditGrid{
-  display:grid;
-  grid-template-columns:78px minmax(0,1fr);
-  gap:10px 12px;
-  align-items:center;
-  margin-top:14px;
-}
-.songEditGrid label{
-  font-size:14px;
-  opacity:.86;
-}
-.songEditGrid input,
-.songEditGrid select{
-  width:100%;
-  min-width:0;
-  box-sizing:border-box;
-}
-.songEditKeyRow{
-  display:grid;
-  grid-template-columns:minmax(0,1fr) 48px;
-  gap:8px;
-}
-.songEditMusicBtn{
-  min-width:48px;
-  padding:0;
-  font-size:20px;
-}
-.songEditNewCat{
-  width:100%;
-  margin-top:10px;
-}
-.songEditActions{
-  margin-top:16px;
+/* v1.52: key text is tappable without changing its visual layout. */
+.songkey.keyTap{
+  cursor:pointer;
+  touch-action:manipulation;
 }
 
 </style>
@@ -459,7 +367,7 @@ input, textarea {
 <body>
 <div class="wrap">
   <div class="header">
-    <div><h1>Set List</h1><div class="version">Version 1.51</div></div>
+    <div><h1>Set List</h1><div class="version">Version 1.52</div></div>
   </div>
 
   <div class="tabs">
@@ -485,7 +393,7 @@ input, textarea {
         <input id="newTitle" type="text" placeholder="Title" required>
         <input id="newMin" type="number" min="0" max="99" inputmode="numeric" placeholder="min" required>
         <input id="newSec" type="number" min="0" max="59" inputmode="numeric" placeholder="sec" required>
-        <input id="newKey" type="text" maxlength="2" placeholder="Key" autocapitalize="characters">
+        <input id="newKey" type="text" maxlength="8" placeholder="Key" autocapitalize="characters">
         <select id="newProject"></select>
         <button class="btn primary add" type="submit">Add</button>
       </form>
@@ -493,12 +401,12 @@ input, textarea {
 
     <details class="card addCard">
       <summary>Add songs as a list</summary>
-      <textarea id="bulkText" placeholder="Song One — 3:42 — F#&#10;Song Two — 4:05 — Bb&#10;Song Three — 3:18"></textarea>
+      <textarea id="bulkText" placeholder="Song One — 3:42 — Am&#10;Song Two — 4:05 — E&#10;Song Three — 3:18"></textarea>
       <div class="bulkActions">
         <select id="bulkProject"></select>
         <button id="bulkAdd" class="btn primary" type="button">Add all</button>
       </div>
-      <div class="note">One song per line: Title — 3:42 — F#. Key is optional.</div>
+      <div class="note">One song per line: Title — 3:42 — Am. Key is optional.</div>
       <div id="bulkResult" class="note"></div>
     </details>
   </section>
@@ -581,33 +489,14 @@ input, textarea {
 </div>
 
 
-<div id="songEditOverlay" class="savedEditOverlay" hidden>
-  <div id="songEditDialog" class="savedEditDialog songEditDialog" role="dialog" aria-modal="true" aria-labelledby="songEditTitle">
-    <div id="songEditTitle" class="savedEditTitle">Edit Song</div>
-
-    <div class="songEditGrid">
-      <label for="songEditName">Title</label>
-      <input id="songEditName" type="text" autocomplete="off">
-
-      <label for="songEditDuration">Duration</label>
-      <input id="songEditDuration" type="text" inputmode="numeric" placeholder="4:05" maxlength="5">
-
-      <label for="songEditKey">Key</label>
-      <div class="songEditKeyRow">
-        <input id="songEditKey" type="text" maxlength="2" placeholder="F#">
-        <button id="songEditKeyPicker" type="button" class="songEditMusicBtn" aria-label="Select key">♫</button>
-      </div>
-
-      <label for="songEditCategory">Category</label>
-      <select id="songEditCategory"></select>
+<div id="accidentalPicker" class="pickerOverlay" hidden>
+  <div class="pickerDialog" role="dialog" aria-modal="true" aria-labelledby="accidentalPickerTitle">
+    <div id="accidentalPickerTitle" class="pickerTitle">Accidental</div>
+    <div class="pickerOptions">
+      <button id="accSharp" type="button" class="btn pickerOption">♯ Sharp</button>
+      <button id="accFlat" type="button" class="btn pickerOption">♭ Flat</button>
     </div>
-
-    <button id="songEditNewCategory" type="button" class="songEditNewCat">New category…</button>
-
-    <div class="undoRedoRow songEditActions">
-      <button id="songEditCancel" type="button">Cancel</button>
-      <button id="songEditSave" type="button">Save</button>
-    </div>
+    <button id="accCancel" type="button" class="btn pickerCancel">Cancel</button>
   </div>
 </div>
 
@@ -626,23 +515,6 @@ function cancelPendingDeletes(){
  document.querySelectorAll(".setrow.pending-delete").forEach(row=>row.classList.remove("pending-delete"));
 }
 const $=id=>document.getElementById(id);
-
-function normalizeKey(raw){
- let x=(raw||"").trim();
- if(!x)return "";
- x=x.replace(/♯/g,"#").replace(/♭/g,"b");
- const m=x.match(/^([A-Ga-gHh])\s*([#b]?)/);
- if(!m)return "";
- return m[1].toUpperCase()+(m[2]||"");
-}
-function keyHTML(raw){
- const k=normalizeKey(raw);
- if(!k)return "";
- const note=k.charAt(0);
- const acc=k.slice(1)==="#"?"♯":k.slice(1)==="b"?"♭":"";
- return `<span class="keynote">${note}</span><span class="keyacc">${acc}</span>`;
-}
-
 
 let songs=JSON.parse(localStorage.getItem("setlist_songs")||"null") ||
  starter.map((x,i)=>({id:"m"+i,title:x[0],duration:x[1]*60+x[2],project:"MessAge"}));
@@ -854,116 +726,25 @@ function deleteSongEverywhere(id){
  songs=songs.filter(s=>s.id!==id);
  persist();refreshCategoryControls();renderAll();
 }
+async function editSong(id){
+ const s=byId(id); if(!s)return;
+ const title=prompt("Song title:",s.title); if(title===null)return;
+ const cleanTitle=title.trim(); if(!cleanTitle){alert("Song title cannot be empty.");return}
+ const minText=prompt("Minutes:",String(Math.floor(s.duration/60))); if(minText===null)return;
+ const secText=prompt("Seconds (0–59):",String(s.duration%60)); if(secText===null)return;
+ const min=Number(minText),sec=Number(secText);
+ if(!Number.isInteger(min)||min<0||!Number.isInteger(sec)||sec<0||sec>59){alert("Invalid duration.");return}
+ const keyText=prompt("Key (optional):",s.key||""); if(keyText===null)return;
+ const key=keyText.trim();
 
-let editingSongId=null;
+ const picked=await pickCategory(repCategories,s.project,{newPrompt:"New Repertoire category name:"});
+ if(!picked)return;
+ let project=repCategories.find(x=>x.toLowerCase()===picked.category.toLowerCase());
+ if(!project){repCategories.push(picked.category);project=picked.category}
 
-function parseDurationText(text){
- const m=(text||"").trim().match(/^(\d{1,2}):([0-5]\d)$/);
- if(!m)return null;
- return Number(m[1])*60+Number(m[2]);
+ s.title=cleanTitle;s.duration=min*60+sec;s.key=key;s.project=project;
+ persist();refreshCategoryControls();renderAll();
 }
-
-function formatDurationInput(seconds){
- seconds=Math.max(0,Number(seconds)||0);
- const m=Math.floor(seconds/60), s=seconds%60;
- return `${m}:${String(s).padStart(2,"0")}`;
-}
-
-function fillSongEditCategories(current){
- const sel=$("songEditCategory");
- sel.innerHTML="";
- repCategories.forEach(cat=>{
-  const o=document.createElement("option");
-  o.value=cat;
-  o.textContent=cat;
-  if(cat===current)o.selected=true;
-  sel.appendChild(o);
- });
- if(current && !repCategories.includes(current)){
-  const o=document.createElement("option");
-  o.value=current;o.textContent=current;o.selected=true;
-  sel.appendChild(o);
- }
-}
-
-function syncSongEditorViewport(){
- const ov=$("songEditOverlay");
- const vv=window.visualViewport;
- if(!ov || ov.hidden)return;
- if(vv){
-  ov.style.top=vv.offsetTop+"px";
-  ov.style.height=vv.height+"px";
- }else{
-  ov.style.top="0";
-  ov.style.height="100dvh";
- }
-}
-
-function closeSongEditor(){
- const ov=$("songEditOverlay");
- ov.hidden=true;
- ov.style.top="";
- ov.style.height="";
- editingSongId=null;
- if(window.visualViewport){
-  window.visualViewport.removeEventListener("resize",syncSongEditorViewport);
-  window.visualViewport.removeEventListener("scroll",syncSongEditorViewport);
- }
-}
-
-function openSongEditor(id){
- const s=byId(id);
- if(!s)return;
- editingSongId=id;
-
- $("songEditName").value=s.title||"";
- $("songEditDuration").value=formatDurationInput(s.duration);
- $("songEditKey").value=normalizeKey(s.key);
- fillSongEditCategories(s.project||repCategories[0]||"");
-
- const ov=$("songEditOverlay");
- ov.hidden=false;
- syncSongEditorViewport();
-
- if(window.visualViewport){
-  window.visualViewport.addEventListener("resize",syncSongEditorViewport);
-  window.visualViewport.addEventListener("scroll",syncSongEditorViewport);
- }
-
- // No autofocus: prevents iOS keyboard from immediately covering the controls.
- setTimeout(()=>$("songEditDialog").scrollTop=0,0);
-}
-
-async function saveSongEditor(){
- const s=byId(editingSongId);
- if(!s)return closeSongEditor();
-
- const title=$("songEditName").value.trim();
- const duration=parseDurationText($("songEditDuration").value);
- const rawKey=$("songEditKey").value.trim();
- const key=normalizeKey(rawKey);
- const project=$("songEditCategory").value;
-
- if(!title){ alert("Enter a song title."); return; }
- if(duration===null){ alert("Duration must be in m:ss format, for example 4:05."); return; }
- if(rawKey && !key){ alert("Use a note A–G (or H) with optional # or b."); return; }
- if(!project){ alert("Choose a category."); return; }
-
- s.title=title;
- s.duration=duration;
- s.key=key;
- s.project=project;
-
- persist();
- refreshCategoryControls();
- closeSongEditor();
- renderAll();
-}
-
-function editSong(id){
- openSongEditor(id);
-}
-
 function toggleSet(id){
  rememberMainForUndo();
  const i=main.findIndex(x=>x.id===id);
@@ -1143,6 +924,52 @@ function bindRepSwipe(wrap,row,song){
  },true);
 }
 
+
+let accidentalSongId=null;
+
+function baseKeyLetter(raw){
+ const k=(raw||"").trim();
+ const m=k.match(/[A-Ga-gHh]/);
+ return m ? m[0].toUpperCase() : "";
+}
+
+function openAccidentalPicker(songId){
+ const s=byId(songId);
+ if(!s || !baseKeyLetter(s.key))return;
+ accidentalSongId=songId;
+ $("accidentalPicker").hidden=false;
+}
+
+function closeAccidentalPicker(){
+ $("accidentalPicker").hidden=true;
+ accidentalSongId=null;
+}
+
+function setSongAccidental(mark){
+ const s=byId(accidentalSongId);
+ if(!s)return closeAccidentalPicker();
+ const base=baseKeyLetter(s.key);
+ if(!base)return closeAccidentalPicker();
+
+ // Store simple ASCII form for compatibility with the existing editor/backups.
+ s.key=base+(mark==="♯"?"#":"b");
+ persist();
+ closeAccidentalPicker();
+ renderAll();
+}
+
+function bindKeyTap(el,songId){
+ if(!el)return;
+ el.classList.add("keyTap");
+ el.addEventListener("click",e=>{
+  e.preventDefault();
+  e.stopPropagation();
+  openAccidentalPicker(songId);
+ });
+ el.addEventListener("touchstart",e=>e.stopPropagation(),{passive:true});
+}
+
+
 function renderRep(){
  openRepSwipe=null;
  const q=$("search").value.trim().toLowerCase(),f=$("filter").value,host=$("rep");
@@ -1155,7 +982,8 @@ function renderRep(){
   const title=row.querySelector(".title"),btn=row.querySelector(".toggle"),handle=row.querySelector(".handle");
   title.textContent=s.title;
   row.querySelector(".duration").textContent=fmt(s.duration);
-  row.querySelector(".songkey").innerHTML=keyHTML(s.key);
+  row.querySelector(".songkey").textContent=s.key||"";
+  bindKeyTap(row.querySelector(".songkey"),s.id);
   const selected=inSet(s.id);
   btn.textContent=selected?"✓":"+";
   btn.classList.toggle("inset",selected);
@@ -1195,7 +1023,8 @@ function renderSet(){
   row.querySelector(".num").textContent=i+1;
   row.querySelector(".title").textContent=s.title;
   row.querySelector(".duration").textContent=fmt(s.duration);
-  row.querySelector(".songkey").innerHTML=keyHTML(s.key);
+  row.querySelector(".songkey").textContent=s.key||"";
+  bindKeyTap(row.querySelector(".songkey"),s.id);
   bindLongPressAction(row.querySelector(".title"),()=>{
    void editSong(s.id);
   });
@@ -1466,7 +1295,7 @@ $("bulkProject").onchange=()=>{
 
 $("addForm").onsubmit=e=>{
  e.preventDefault();
- const title=$("newTitle").value.trim(),min=Number($("newMin").value),sec=Number($("newSec").value),key=normalizeKey($("newKey").value);
+ const title=$("newTitle").value.trim(),min=Number($("newMin").value),sec=Number($("newSec").value),key=$("newKey").value.trim();
  if(!title||!Number.isInteger(min)||!Number.isInteger(sec)||min<0||sec<0||sec>59)return;
  songs.push({id:"s"+Date.now(),title,duration:min*60+sec,key,project:$("newProject").value});
  $("newTitle").value="";$("newMin").value="";$("newSec").value="";$("newKey").value="";
@@ -1479,11 +1308,11 @@ $("bulkAdd").onclick=()=>{
  const lines=text.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
  let added=0;const skipped=[];
  lines.forEach((line,i)=>{
-  const m=line.match(/^(.*?)\s*(?:[—–-]\s*)?(\d{1,2}):([0-5]\d)(?:\s*[—–-]\s*([A-Ga-gHh](?:#|b|♯|♭)?))?\s*$/);
+  const m=line.match(/^(.*?)\s*(?:[—–-]\s*)?(\d{1,2}):([0-5]\d)(?:\s*[—–-]\s*([A-Ga-g](?:#|b)?(?:m|maj|min|sus|dim|aug)?\d*))?\s*$/);
   if(!m){skipped.push(i+1);return}
   const title=m[1].trim().replace(/[—–-]\s*$/,"").trim();
   if(!title){skipped.push(i+1);return}
-  const key=normalizeKey(m[4]||"");
+  const key=(m[4]||"").trim();
   songs.push({id:"s"+Date.now()+"_"+i+"_"+Math.random().toString(36).slice(2,7),title,duration:Number(m[2])*60+Number(m[3]),key,project});
   added++;
  });
@@ -1661,30 +1490,11 @@ $("backupFile").onchange=async e=>{
 };
 
 persist();refreshCategoryControls();
-$("songEditCancel").onclick=closeSongEditor;
-$("songEditSave").onclick=saveSongEditor;
-
-$("songEditOverlay").onclick=e=>{
- if(e.target===$("songEditOverlay"))closeSongEditor();
-};
-
-$("songEditNewCategory").onclick=()=>{
- const name=prompt("New Repertoire category name:");
- if(name===null)return;
- const cat=name.trim();
- if(!cat)return;
- if(!repCategories.includes(cat)){
-  repCategories.push(cat);
-  persist();
- }
- fillSongEditCategories(cat);
-};
-
-$("songEditKeyPicker").onclick=async()=>{
- const current=normalizeKey($("songEditKey").value);
- const keys=["C","C#","Db","D","Eb","E","F","F#","Gb","G","Ab","A","Bb","B","H"];
- const picked=await pickCategory(keys,current,{allowNew:false});
- if(picked!==null)$("songEditKey").value=normalizeKey(picked);
+$("accSharp").onclick=()=>setSongAccidental("♯");
+$("accFlat").onclick=()=>setSongAccidental("♭");
+$("accCancel").onclick=closeAccidentalPicker;
+$("accidentalPicker").onclick=e=>{
+ if(e.target===$("accidentalPicker"))closeAccidentalPicker();
 };
 
 renderAll();

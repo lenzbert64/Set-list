@@ -1,14 +1,12 @@
-Set List PWA v1.51
+Set List PWA v1.52
 
-Unified song editor:
-- Long-press a song title in Repertoire or Current Set.
-- Opens one compact Edit Song panel instead of sequential prompts.
-- Fields: Title, Duration, Key, Category.
-- Duration uses m:ss format.
-- Key remains optional and supports note + optional sharp/flat only.
-- Music button opens a compact key picker.
-- Category is chosen in the same editor; New category… remains available.
-- Cancel / Save are always in the same panel.
-- No autofocus, so the iOS keyboard does not open immediately.
-- Existing swipe-to-delete remains separate in Repertoire.
-- All other v1.50 functionality is unchanged.
+Base: v1.48.
+
+Only change:
+- The existing key text is tappable in Repertoire and Current Set.
+- If a song already has a key letter, tapping it opens a small Sharp / Flat picker.
+- Choosing Sharp adds/replaces the accidental with #.
+- Choosing Flat adds/replaces the accidental with b.
+- The existing step-by-step song editor is unchanged.
+- Repertoire swipe-to-delete with confirmation remains exactly as in v1.48.
+- No other layout, font, spacing, row-width, editor, duration-entry, or control logic was changed.

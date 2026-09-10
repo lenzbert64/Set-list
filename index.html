@@ -362,6 +362,64 @@ input, textarea {
   touch-action:manipulation;
 }
 
+
+/* v1.53 row geometry refinements only */
+
+/* Title and duration remain one natural inline unit; if the title wraps,
+   duration follows immediately after the final title word. */
+.songline{
+  display:block;
+  min-width:0;
+  line-height:1.18;
+}
+.songline .title{
+  display:inline;
+  white-space:normal;
+  overflow:visible;
+  text-overflow:clip;
+}
+.songline .duration{
+  display:inline;
+  margin-left:8px;
+  white-space:nowrap;
+}
+
+/* Current Set: reclaim horizontal space from the number column. */
+.setrow{
+  grid-template-columns:18px minmax(0,1fr) 30px 38px 32px;
+  gap:7px;
+}
+.setrow .num{
+  text-align:left;
+  padding-left:0;
+}
+
+/* Keep the key column exactly where the existing grid puts it.
+   The note letter owns a fixed slot; accidental is absolutely placed
+   to its right, so F and F# share the same letter axis. */
+.songkey{
+  position:relative;
+  width:30px;
+  padding-right:3px;
+  box-sizing:border-box;
+  text-align:right;
+  overflow:visible;
+}
+.songkey .keyBase{
+  display:block;
+  width:18px;
+  margin-left:auto;
+  text-align:center;
+}
+.songkey .keyAcc{
+  position:absolute;
+  left:23px;
+  top:50%;
+  transform:translateY(-50%);
+  font-size:13px;
+  line-height:1;
+}
+
 </style>
 </head>
 <body>
@@ -927,6 +985,18 @@ function bindRepSwipe(wrap,row,song){
 
 let accidentalSongId=null;
 
+
+function keyDisplayHTML(raw){
+ const k=(raw||"").trim();
+ if(!k)return "";
+ const base=baseKeyLetter(k);
+ if(!base)return "";
+ let acc="";
+ if(k.includes("#")||k.includes("♯"))acc="♯";
+ else if(k.includes("b")||k.includes("♭"))acc="♭";
+ return `<span class="keyBase">${base}</span>${acc?`<span class="keyAcc">${acc}</span>`:""}`;
+}
+
 function baseKeyLetter(raw){
  const k=(raw||"").trim();
  const m=k.match(/[A-Ga-gHh]/);
@@ -982,7 +1052,7 @@ function renderRep(){
   const title=row.querySelector(".title"),btn=row.querySelector(".toggle"),handle=row.querySelector(".handle");
   title.textContent=s.title;
   row.querySelector(".duration").textContent=fmt(s.duration);
-  row.querySelector(".songkey").textContent=s.key||"";
+  row.querySelector(".songkey").innerHTML=keyDisplayHTML(s.key);
   bindKeyTap(row.querySelector(".songkey"),s.id);
   const selected=inSet(s.id);
   btn.textContent=selected?"✓":"+";
@@ -1023,7 +1093,7 @@ function renderSet(){
   row.querySelector(".num").textContent=i+1;
   row.querySelector(".title").textContent=s.title;
   row.querySelector(".duration").textContent=fmt(s.duration);
-  row.querySelector(".songkey").textContent=s.key||"";
+  row.querySelector(".songkey").innerHTML=keyDisplayHTML(s.key);
   bindKeyTap(row.querySelector(".songkey"),s.id);
   bindLongPressAction(row.querySelector(".title"),()=>{
    void editSong(s.id);

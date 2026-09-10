@@ -1,12 +1,10 @@
-Set List PWA v1.52
+Set List PWA v1.53
+Base: v1.52.
 
-Base: v1.48.
-
-Only change:
-- The existing key text is tappable in Repertoire and Current Set.
-- If a song already has a key letter, tapping it opens a small Sharp / Flat picker.
-- Choosing Sharp adds/replaces the accidental with #.
-- Choosing Flat adds/replaces the accidental with b.
-- The existing step-by-step song editor is unchanged.
-- Repertoire swipe-to-delete with confirmation remains exactly as in v1.48.
-- No other layout, font, spacing, row-width, editor, duration-entry, or control logic was changed.
+Geometry-only refinements:
+- Repertoire and Current Set: duration now follows immediately after the song title, including wrapped titles.
+- Current Set: song-number column reduced from 24px to 18px to give titles more room.
+- Key letters remain on one fixed vertical axis.
+- Sharp/flat is rendered separately to the right and no longer shifts the main key letter.
+- Key column itself stays in the existing right-side grid position.
+- No functional behavior from v1.52 was changed.

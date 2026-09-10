@@ -1,10 +1,9 @@
-Set List PWA v1.42
+Set List PWA v1.43
 
-Saved Sets editor UI refinement:
-- Editor is now one solid opaque block; Saved Set names no longer show through between sections.
-- Removed automatic focus and automatic full selection of the Set name.
-- Keyboard no longer opens immediately when the editor appears.
-- Added iOS VisualViewport handling so the editor follows the visible area when the keyboard is open.
-- Editor can scroll within the visible area, keeping Cancel / Save reachable.
-- No song/set data logic changed.
-- Current Set song-title editing remains unchanged: song editing is available by long press in Repertoire only.
+Changes:
+- Long press on a song title in Current Set now opens the same song editor used in Repertoire.
+- Editing title/duration/key/category updates the same repertoire song everywhere it is used.
+- Disabled Safari double-tap zoom on app chrome and empty areas.
+- Inputs, textareas and selects remain exempt so editing stays usable.
+- Saved Sets editor from v1.42 is unchanged.
+- 10-step Undo and delayed red-outline deletion are unchanged.

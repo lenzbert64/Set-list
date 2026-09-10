@@ -251,12 +251,16 @@ button, input, select, textarea, summary, .row, .setrow, .handle, .title, .tab {
   }
   .savedEditDialog label{color:#a8adb5}
 }
+
+html,body,.card,.row,.setrow,.tabs,.tab,button{
+  touch-action:manipulation;
+}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="header">
-    <div><h1>Set List</h1><div class="version">Version 1.42</div></div>
+    <div><h1>Set List</h1><div class="version">Version 1.43</div></div>
   </div>
 
   <div class="tabs">
@@ -717,6 +721,9 @@ function renderSet(){
   row.querySelector(".title").textContent=s.title;
   row.querySelector(".duration").textContent=fmt(s.duration);
   row.querySelector(".songkey").textContent=s.key||"";
+  bindLongPressAction(row.querySelector(".title"),()=>{
+   void editSong(s.id);
+  });
   row.querySelector(".remove").onclick=()=>{
    const existing=pendingDeletes.get(s.id);
    if(existing){
@@ -1161,6 +1168,19 @@ if("serviceWorker" in navigator){
  navigator.serviceWorker.getRegistrations().then(regs=>Promise.all(regs.map(r=>r.unregister()))).catch(()=>{});
 }
 if("caches" in window)caches.keys().then(keys=>Promise.all(keys.map(k=>caches.delete(k)))).catch(()=>{});
+
+// Prevent Safari double-tap zoom on app chrome and empty areas.
+let lastTouchEnd=0;
+document.addEventListener("touchend",e=>{
+ const target=e.target;
+ const isForm=target && target.closest && target.closest("input,textarea,select");
+ const now=Date.now();
+ if(!isForm && now-lastTouchEnd<320){
+  e.preventDefault();
+ }
+ lastTouchEnd=now;
+},{passive:false});
+
 </script>
 
 <div id="categoryPicker" class="pickerOverlay" hidden>

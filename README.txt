@@ -1,9 +1,14 @@
-Set List PWA v1.50
+Set List PWA v1.51
 
-Key-column spacing refinement:
-- Restored the visual spacing between the key column and the adjacent controls to match v1.48.
-- Repertoire: key sits as close to the drag handle as in v1.48.
-- Current Set: key sits as close to the minus button as in v1.48.
-- The v1.49 aligned-letter layout is retained.
-- Sharps/flats still appear in a small slot to the right of the main note letter.
-- All other v1.49 functionality is unchanged.
+Unified song editor:
+- Long-press a song title in Repertoire or Current Set.
+- Opens one compact Edit Song panel instead of sequential prompts.
+- Fields: Title, Duration, Key, Category.
+- Duration uses m:ss format.
+- Key remains optional and supports note + optional sharp/flat only.
+- Music button opens a compact key picker.
+- Category is chosen in the same editor; New category… remains available.
+- Cancel / Save are always in the same panel.
+- No autofocus, so the iOS keyboard does not open immediately.
+- Existing swipe-to-delete remains separate in Repertoire.
+- All other v1.50 functionality is unchanged.

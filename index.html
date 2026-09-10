@@ -412,12 +412,54 @@ input, textarea {
   margin-left:1px;
 }
 
+
+/* v1.51 unified song editor */
+.songEditDialog{
+  width:min(92vw,420px);
+  max-height:calc(100dvh - 24px);
+  overflow:auto;
+}
+.songEditGrid{
+  display:grid;
+  grid-template-columns:78px minmax(0,1fr);
+  gap:10px 12px;
+  align-items:center;
+  margin-top:14px;
+}
+.songEditGrid label{
+  font-size:14px;
+  opacity:.86;
+}
+.songEditGrid input,
+.songEditGrid select{
+  width:100%;
+  min-width:0;
+  box-sizing:border-box;
+}
+.songEditKeyRow{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 48px;
+  gap:8px;
+}
+.songEditMusicBtn{
+  min-width:48px;
+  padding:0;
+  font-size:20px;
+}
+.songEditNewCat{
+  width:100%;
+  margin-top:10px;
+}
+.songEditActions{
+  margin-top:16px;
+}
+
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="header">
-    <div><h1>Set List</h1><div class="version">Version 1.50</div></div>
+    <div><h1>Set List</h1><div class="version">Version 1.51</div></div>
   </div>
 
   <div class="tabs">
@@ -534,6 +576,37 @@ input, textarea {
     <div class="undoRedoRow">
       <button id="songDeleteCancel" type="button">Cancel</button>
       <button id="songDeleteConfirm" type="button">Delete song</button>
+    </div>
+  </div>
+</div>
+
+
+<div id="songEditOverlay" class="savedEditOverlay" hidden>
+  <div id="songEditDialog" class="savedEditDialog songEditDialog" role="dialog" aria-modal="true" aria-labelledby="songEditTitle">
+    <div id="songEditTitle" class="savedEditTitle">Edit Song</div>
+
+    <div class="songEditGrid">
+      <label for="songEditName">Title</label>
+      <input id="songEditName" type="text" autocomplete="off">
+
+      <label for="songEditDuration">Duration</label>
+      <input id="songEditDuration" type="text" inputmode="numeric" placeholder="4:05" maxlength="5">
+
+      <label for="songEditKey">Key</label>
+      <div class="songEditKeyRow">
+        <input id="songEditKey" type="text" maxlength="2" placeholder="F#">
+        <button id="songEditKeyPicker" type="button" class="songEditMusicBtn" aria-label="Select key">♫</button>
+      </div>
+
+      <label for="songEditCategory">Category</label>
+      <select id="songEditCategory"></select>
+    </div>
+
+    <button id="songEditNewCategory" type="button" class="songEditNewCat">New category…</button>
+
+    <div class="undoRedoRow songEditActions">
+      <button id="songEditCancel" type="button">Cancel</button>
+      <button id="songEditSave" type="button">Save</button>
     </div>
   </div>
 </div>
@@ -781,26 +854,116 @@ function deleteSongEverywhere(id){
  songs=songs.filter(s=>s.id!==id);
  persist();refreshCategoryControls();renderAll();
 }
-async function editSong(id){
- const s=byId(id); if(!s)return;
- const title=prompt("Song title:",s.title); if(title===null)return;
- const cleanTitle=title.trim(); if(!cleanTitle){alert("Song title cannot be empty.");return}
- const minText=prompt("Minutes:",String(Math.floor(s.duration/60))); if(minText===null)return;
- const secText=prompt("Seconds (0–59):",String(s.duration%60)); if(secText===null)return;
- const min=Number(minText),sec=Number(secText);
- if(!Number.isInteger(min)||min<0||!Number.isInteger(sec)||sec<0||sec>59){alert("Invalid duration.");return}
- const keyText=prompt("Key (optional: A, F#, Bb):",normalizeKey(s.key)); if(keyText===null)return;
- const key=normalizeKey(keyText);
- if(keyText.trim() && !key){alert("Use a note A–G (or H) with optional # or b.");return}
 
- const picked=await pickCategory(repCategories,s.project,{newPrompt:"New Repertoire category name:"});
- if(!picked)return;
- let project=repCategories.find(x=>x.toLowerCase()===picked.category.toLowerCase());
- if(!project){repCategories.push(picked.category);project=picked.category}
+let editingSongId=null;
 
- s.title=cleanTitle;s.duration=min*60+sec;s.key=key;s.project=project;
- persist();refreshCategoryControls();renderAll();
+function parseDurationText(text){
+ const m=(text||"").trim().match(/^(\d{1,2}):([0-5]\d)$/);
+ if(!m)return null;
+ return Number(m[1])*60+Number(m[2]);
 }
+
+function formatDurationInput(seconds){
+ seconds=Math.max(0,Number(seconds)||0);
+ const m=Math.floor(seconds/60), s=seconds%60;
+ return `${m}:${String(s).padStart(2,"0")}`;
+}
+
+function fillSongEditCategories(current){
+ const sel=$("songEditCategory");
+ sel.innerHTML="";
+ repCategories.forEach(cat=>{
+  const o=document.createElement("option");
+  o.value=cat;
+  o.textContent=cat;
+  if(cat===current)o.selected=true;
+  sel.appendChild(o);
+ });
+ if(current && !repCategories.includes(current)){
+  const o=document.createElement("option");
+  o.value=current;o.textContent=current;o.selected=true;
+  sel.appendChild(o);
+ }
+}
+
+function syncSongEditorViewport(){
+ const ov=$("songEditOverlay");
+ const vv=window.visualViewport;
+ if(!ov || ov.hidden)return;
+ if(vv){
+  ov.style.top=vv.offsetTop+"px";
+  ov.style.height=vv.height+"px";
+ }else{
+  ov.style.top="0";
+  ov.style.height="100dvh";
+ }
+}
+
+function closeSongEditor(){
+ const ov=$("songEditOverlay");
+ ov.hidden=true;
+ ov.style.top="";
+ ov.style.height="";
+ editingSongId=null;
+ if(window.visualViewport){
+  window.visualViewport.removeEventListener("resize",syncSongEditorViewport);
+  window.visualViewport.removeEventListener("scroll",syncSongEditorViewport);
+ }
+}
+
+function openSongEditor(id){
+ const s=byId(id);
+ if(!s)return;
+ editingSongId=id;
+
+ $("songEditName").value=s.title||"";
+ $("songEditDuration").value=formatDurationInput(s.duration);
+ $("songEditKey").value=normalizeKey(s.key);
+ fillSongEditCategories(s.project||repCategories[0]||"");
+
+ const ov=$("songEditOverlay");
+ ov.hidden=false;
+ syncSongEditorViewport();
+
+ if(window.visualViewport){
+  window.visualViewport.addEventListener("resize",syncSongEditorViewport);
+  window.visualViewport.addEventListener("scroll",syncSongEditorViewport);
+ }
+
+ // No autofocus: prevents iOS keyboard from immediately covering the controls.
+ setTimeout(()=>$("songEditDialog").scrollTop=0,0);
+}
+
+async function saveSongEditor(){
+ const s=byId(editingSongId);
+ if(!s)return closeSongEditor();
+
+ const title=$("songEditName").value.trim();
+ const duration=parseDurationText($("songEditDuration").value);
+ const rawKey=$("songEditKey").value.trim();
+ const key=normalizeKey(rawKey);
+ const project=$("songEditCategory").value;
+
+ if(!title){ alert("Enter a song title."); return; }
+ if(duration===null){ alert("Duration must be in m:ss format, for example 4:05."); return; }
+ if(rawKey && !key){ alert("Use a note A–G (or H) with optional # or b."); return; }
+ if(!project){ alert("Choose a category."); return; }
+
+ s.title=title;
+ s.duration=duration;
+ s.key=key;
+ s.project=project;
+
+ persist();
+ refreshCategoryControls();
+ closeSongEditor();
+ renderAll();
+}
+
+function editSong(id){
+ openSongEditor(id);
+}
+
 function toggleSet(id){
  rememberMainForUndo();
  const i=main.findIndex(x=>x.id===id);
@@ -1497,7 +1660,34 @@ $("backupFile").onchange=async e=>{
  e.target.value="";
 };
 
-persist();refreshCategoryControls();renderAll();
+persist();refreshCategoryControls();
+$("songEditCancel").onclick=closeSongEditor;
+$("songEditSave").onclick=saveSongEditor;
+
+$("songEditOverlay").onclick=e=>{
+ if(e.target===$("songEditOverlay"))closeSongEditor();
+};
+
+$("songEditNewCategory").onclick=()=>{
+ const name=prompt("New Repertoire category name:");
+ if(name===null)return;
+ const cat=name.trim();
+ if(!cat)return;
+ if(!repCategories.includes(cat)){
+  repCategories.push(cat);
+  persist();
+ }
+ fillSongEditCategories(cat);
+};
+
+$("songEditKeyPicker").onclick=async()=>{
+ const current=normalizeKey($("songEditKey").value);
+ const keys=["C","C#","Db","D","Eb","E","F","F#","Gb","G","Ab","A","Bb","B","H"];
+ const picked=await pickCategory(keys,current,{allowNew:false});
+ if(picked!==null)$("songEditKey").value=normalizeKey(picked);
+};
+
+renderAll();
 
 if("serviceWorker" in navigator){
  navigator.serviceWorker.getRegistrations().then(regs=>Promise.all(regs.map(r=>r.unregister()))).catch(()=>{});

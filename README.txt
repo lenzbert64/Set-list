@@ -1,10 +1,10 @@
-Set List PWA v1.53
-Base: v1.52.
+Set List PWA v1.54
 
-Geometry-only refinements:
-- Repertoire and Current Set: duration now follows immediately after the song title, including wrapped titles.
-- Current Set: song-number column reduced from 24px to 18px to give titles more room.
-- Key letters remain on one fixed vertical axis.
-- Sharp/flat is rendered separately to the right and no longer shifts the main key letter.
-- Key column itself stays in the existing right-side grid position.
-- No functional behavior from v1.52 was changed.
+Base: v1.53.
+
+Fixes:
+- Correct visible version label to 1.54.
+- Accidental picker now shows symbols only: ♯, ♭, −.
+- − removes the accidental while keeping the base key letter.
+- Empty Key in the existing step-by-step song editor is saved as an empty key.
+- No other layout or behavior changed.

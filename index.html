@@ -322,7 +322,7 @@ input, textarea {
 <body>
 <div class="wrap">
   <div class="header">
-    <div><h1>Set List</h1><div class="version">Version 1.46</div></div>
+    <div><h1>Set List</h1><div class="version">Version 1.47</div></div>
   </div>
 
   <div class="tabs">
@@ -431,6 +431,18 @@ input, textarea {
 </div>
 
 
+
+<div id="songDeleteOverlay" class="savedEditOverlay" hidden>
+  <div class="savedEditDialog" role="dialog" aria-modal="true">
+    <div class="savedEditTitle">Delete song?</div>
+    <div id="songDeleteText" class="hint" style="margin:10px 0 14px"></div>
+    <div class="undoRedoRow">
+      <button id="songDeleteCancel" type="button">Cancel</button>
+      <button id="songDeleteConfirm" type="button">Delete song</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const starter=[
 ["When Your Love Is In Town",4,38],["I've Got To Know",4,55],["Tears",4,13],
@@ -533,7 +545,7 @@ const inSet=id=>main.some(x=>x.id===id);
 
 const NEW_CATEGORY="__new_category__";
 
-function pickCategory(categories,current,{allowNew=true,newPrompt="New category name:"}={}){
+function pickCategory(categories,current,{allowNew=true,newPrompt="New category name:",allowDelete=false}={}){
  return new Promise(resolve=>{
   const overlay=$("categoryPicker"),options=$("pickerOptions");
   options.innerHTML="";
@@ -546,6 +558,13 @@ function pickCategory(categories,current,{allowNew=true,newPrompt="New category 
    b.onclick=()=>close({category:cat,isNew:false});
    options.appendChild(b);
   });
+  if(allowDelete){
+   const d=document.createElement("button");
+   d.type="button";d.className="btn pickerOption";
+   d.textContent="Delete song…";
+   d.onclick=()=>close("__DELETE_SONG__");
+   options.appendChild(d);
+  }
   if(allowNew){
    const b=document.createElement("button");
    b.type="button";b.className="btn pickerOption";
@@ -629,6 +648,33 @@ function summary(){
  $("currentSetName").textContent=currentSetName;
  $("currentSetNameBar").hidden=!currentSetName;
 }
+
+function confirmSongDelete(song){
+ return new Promise(resolve=>{
+  const ov=$("songDeleteOverlay");
+  $("songDeleteText").textContent=`Remove “${song.title}” from Repertoire, Current Set and all Saved Sets?`;
+  ov.hidden=false;
+  const close=value=>{
+   ov.hidden=true;
+   $("songDeleteCancel").onclick=null;
+   $("songDeleteConfirm").onclick=null;
+   ov.onclick=null;
+   resolve(value);
+  };
+  $("songDeleteCancel").onclick=()=>close(false);
+  $("songDeleteConfirm").onclick=()=>close(true);
+  ov.onclick=e=>{if(e.target===ov)close(false)};
+ });
+}
+function deleteSongEverywhere(id){
+ cancelPendingDeletes();
+ if(main.some(x=>x.id===id))rememberMainForUndo();
+ if(saved.some(set=>(set.main||[]).some(x=>x.id===id)))rememberSavedForUndo();
+ main=main.filter(x=>x.id!==id);
+ saved=saved.map(set=>({...set,main:(set.main||[]).filter(x=>x.id!==id)}));
+ songs=songs.filter(s=>s.id!==id);
+ persist();refreshCategoryControls();renderAll();
+}
 async function editSong(id){
  const s=byId(id); if(!s)return;
  const title=prompt("Song title:",s.title); if(title===null)return;
@@ -640,7 +686,11 @@ async function editSong(id){
  const keyText=prompt("Key (optional):",s.key||""); if(keyText===null)return;
  const key=keyText.trim();
 
- const picked=await pickCategory(repCategories,s.project,{newPrompt:"New Repertoire category name:"});
+ const picked=await pickCategory(repCategories,s.project,{newPrompt:"New Repertoire category name:",allowDelete:true});
+ if(picked==="__DELETE_SONG__"){
+  if(await confirmSongDelete(s))deleteSongEverywhere(s.id);
+  return;
+ }
  if(!picked)return;
  let project=repCategories.find(x=>x.toLowerCase()===picked.category.toLowerCase());
  if(!project){repCategories.push(picked.category);project=picked.category}

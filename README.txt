@@ -1,7 +1,9 @@
-Set List PWA v1.45
+Set List PWA v1.46
 
-Touch refinement:
-- Disabled accidental text selection and iOS text callout throughout the app interface.
-- Long presses that land slightly outside a song title no longer highlight surrounding interface text.
-- Text selection remains enabled inside input and textarea fields for normal editing.
-- All v1.44 functionality is unchanged.
+Current Set history controls:
+- Split the old full-width Undo control into two equal buttons: Undo and Redo.
+- Undo history remains up to 10 steps.
+- Redo restores states that were undone.
+- A new Current Set edit after Undo clears the Redo history, as expected.
+- Pending delayed deletions are cancelled before Undo/Redo.
+- All v1.45 behavior is otherwise unchanged.

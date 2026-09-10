@@ -1,9 +1,9 @@
-Set List PWA v1.49
-- Key column stays in the same right-side position as v1.48.
-- Main key letters are anchored to one fixed vertical axis.
-- Sharp/flat uses a separate slot to the right, so F#, Bb, etc. do not move the main letter.
-- Display uses musical ♯ / ♭ symbols.
-- Key entry accepts simple forms such as F#, Bb, F♯, B♭.
-- Major/minor suffixes are no longer used; legacy suffixes are ignored when displayed/edited.
-- Bulk entry examples and parsing updated accordingly.
-- All other v1.48 behavior is unchanged.
+Set List PWA v1.50
+
+Key-column spacing refinement:
+- Restored the visual spacing between the key column and the adjacent controls to match v1.48.
+- Repertoire: key sits as close to the drag handle as in v1.48.
+- Current Set: key sits as close to the minus button as in v1.48.
+- The v1.49 aligned-letter layout is retained.
+- Sharps/flats still appear in a small slot to the right of the main note letter.
+- All other v1.49 functionality is unchanged.

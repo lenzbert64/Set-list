@@ -383,12 +383,41 @@ input, textarea {
   line-height:1;
 }
 
+
+/* v1.50: v1.48 spacing restored; aligned note + accidental retained. */
+.songkey{
+  display:grid;
+  grid-template-columns:14px 8px;
+  justify-content:end;
+  align-items:center;
+  column-gap:0;
+  width:30px;
+  padding-right:0;
+  box-sizing:border-box;
+  text-align:initial;
+}
+.keynote{
+  grid-column:1;
+  justify-self:end;
+  font-size:16px;
+  font-weight:500;
+  line-height:1;
+}
+.keyacc{
+  grid-column:2;
+  justify-self:start;
+  font-size:13px;
+  font-weight:500;
+  line-height:1;
+  margin-left:1px;
+}
+
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="header">
-    <div><h1>Set List</h1><div class="version">Version 1.49</div></div>
+    <div><h1>Set List</h1><div class="version">Version 1.50</div></div>
   </div>
 
   <div class="tabs">

@@ -1,8 +1,13 @@
-Set List PWA v1.63
-Base: v1.62.
+Set List PWA v1.64
+Base: v1.63.
 
-Fix:
-- Repertoire drag handles work again on iPhone/iPad and desktop.
-- The drag logic now moves the entire swipe-delete wrapper, not only the inner song row.
-- Current Set drag behavior is unchanged.
-- All v1.62 fixes and the 4x4 key picker are retained.
+Added:
+- A small star button on the right side of the saved-set name in Current Set.
+- Tap ☆ / ★ to mark or unmark the linked Saved Set.
+- The change is saved immediately; Update current set is not required.
+- Starred sets display ★ next to their name in Saved Sets.
+- Favorite state is included in Backup / Restore.
+- Old saved data and old backups remain compatible.
+
+No other functional changes.
+Caching remains disabled during stabilization.

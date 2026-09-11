@@ -182,6 +182,55 @@ button, input, select, textarea, summary, .row, .setrow, .handle, .title, .tab {
 
 .currentSetNameEditable{cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 
+.currentSetNameRow{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 28px;
+  gap:6px;
+  align-items:center;
+}
+.currentSetNameEditable{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.favoriteToggle{
+  width:28px;
+  height:28px;
+  min-height:28px;
+  padding:0;
+  margin:0;
+  border:0;
+  background:transparent;
+  color:inherit;
+  font:inherit;
+  font-size:20px;
+  line-height:28px;
+  text-align:center;
+  cursor:pointer;
+  -webkit-appearance:none;
+  appearance:none;
+  touch-action:manipulation;
+  -webkit-user-select:none;
+  user-select:none;
+  -webkit-touch-callout:none;
+}
+.favoriteToggle[hidden]{display:none}
+.savedTitleLine{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:5px;
+  align-items:center;
+  min-width:0;
+}
+.savedFavoriteMark{
+  font-size:15px;
+  line-height:1;
+  white-space:nowrap;
+}
+.savedFavoriteMark[hidden]{display:none}
+
+
 /* v1.32 genuinely compact row density. */
 .row{
   min-height:0;
@@ -458,7 +507,7 @@ input, textarea {
 <body>
 <div class="wrap">
   <div class="header">
-    <div><h1>Set List</h1><div class="version">Version 1.63</div></div>
+    <div><h1>Set List</h1><div class="version">Version 1.64</div></div>
   </div>
 
   <div class="tabs">
@@ -505,7 +554,10 @@ input, textarea {
   <section id="panel-set" class="panel">
     <div class="stickyStats"><div class="statbar"><span id="count">0</span> songs · Total <span id="total">0:00</span></div></div>
     <div id="currentSetNameBar" class="stickyStats setNameStats" hidden>
-      <div class="statbar currentSetNameEditable" id="currentSetName" title="Press and hold to edit saved set"></div>
+      <div class="statbar currentSetNameRow">
+        <div class="currentSetNameEditable" id="currentSetName" title="Press and hold to edit saved set"></div>
+        <button id="currentSetFavorite" class="favoriteToggle" type="button" aria-label="Mark saved set with a star" title="Mark saved set with a star" hidden>☆</button>
+      </div>
     </div>
     <div class="card"><div id="main"></div></div>
     <div class="card">
@@ -660,6 +712,7 @@ let saved=JSON.parse(localStorage.getItem("setlist_saved")||"[]").map((x,i)=>({
  id:x.id||("set_"+Date.now()+"_"+i),
  name:x.name,
  category:normalizeCategory(x.category),
+ favorite:!!x.favorite,
  main:[...(x.main||[]),...(x.encore||[])].filter((v,i,a)=>a.findIndex(y=>y.id===v.id)===i)
 }));
 let currentSavedId=localStorage.getItem("setlist_current_saved_id")||"";
@@ -977,6 +1030,15 @@ function summary(){
  $("repCount").textContent=main.length;
  $("currentSetName").textContent=currentSetName;
  $("currentSetNameBar").hidden=!currentSetName;
+
+ const favoriteButton=$("currentSetFavorite");
+ const linked=currentSavedId ? saved.find(x=>x.id===currentSavedId) : null;
+ if(favoriteButton){
+  favoriteButton.hidden=!linked;
+  favoriteButton.textContent=linked&&linked.favorite?"★":"☆";
+  favoriteButton.setAttribute("aria-label",linked&&linked.favorite?"Remove star from saved set":"Mark saved set with a star");
+  favoriteButton.title=linked&&linked.favorite?"Remove star from saved set":"Mark saved set with a star";
+ }
 }
 
 function confirmSongDelete(song){
@@ -1519,9 +1581,10 @@ function renderSaved(){
  if(!indexes.length){host.innerHTML='<div class="empty">No saved sets in this category</div>';return}
  indexes.forEach(({x,i})=>{
   const row=document.createElement("div");row.className="savedrow";
-  row.innerHTML='<div class="savedopen" role="button" tabindex="0"><div class="title"></div><div class="meta"></div></div><button class="btn savedmini share">Share / Copy</button><button class="btn savedmini del">Delete</button>';
+  row.innerHTML='<div class="savedopen" role="button" tabindex="0"><div class="savedTitleLine"><div class="title"></div><span class="savedFavoriteMark" aria-hidden="true" hidden>★</span></div><div class="meta"></div></div><button class="btn savedmini share">Share / Copy</button><button class="btn savedmini del">Delete</button>';
   const title=row.querySelector(".title");
   title.textContent=x.name;
+  row.querySelector(".savedFavoriteMark").hidden=!x.favorite;
   const savedTotal=x.main.reduce((n,item)=>n+(byId(item.id)?.duration||0),0);
   row.querySelector(".meta").textContent=`${x.main.length} songs · Total ${fmt(savedTotal)}`;
 
@@ -1710,6 +1773,20 @@ $("bulkAdd").onclick=()=>{
   : `Songs added: ${added}.`;
 };
 
+$("currentSetFavorite").onclick=e=>{
+ e.preventDefault();
+ e.stopPropagation();
+ if(!currentSavedId)return;
+ const target=saved.find(x=>x.id===currentSavedId);
+ if(!target)return;
+ rememberSavedForUndo();
+ target.favorite=!target.favorite;
+ persist();
+ summary();
+ renderSaved();
+ updateSavedUndoButton();
+};
+
 (()=>{
  const el=$("currentSetName");
  let timer=null,moved=false;
@@ -1836,7 +1913,7 @@ $("saveSet").onclick=()=>{
   category=cat;
  }
  rememberSavedForUndo();
- const obj={id:"set_"+Date.now()+"_"+Math.random().toString(36).slice(2,8),name,category,main:clone(main)};
+ const obj={id:"set_"+Date.now()+"_"+Math.random().toString(36).slice(2,8),name,category,favorite:false,main:clone(main)};
  saved.push(obj);
  currentSetName=name;
  currentSavedId=obj.id;
@@ -1846,7 +1923,7 @@ $("saveSet").onclick=()=>{
 
 $("exportBackup").onclick=async()=>{
  try{
-  const data={app:"Set List",version:4,exportedAt:new Date().toISOString(),songs,repCategories,main,currentSetName,currentSavedId,encore:[],savedCategories,saved:saved.map(x=>({id:x.id,name:x.name,category:x.category,main:x.main,encore:[]}))};
+  const data={app:"Set List",version:4,exportedAt:new Date().toISOString(),songs,repCategories,main,currentSetName,currentSavedId,encore:[],savedCategories,saved:saved.map(x=>({id:x.id,name:x.name,category:x.category,favorite:!!x.favorite,main:x.main,encore:[]}))};
   const json=JSON.stringify(data,null,2);
   const filename="Set_List_Backup_"+new Date().toISOString().slice(0,10)+".json";
   const file=new File([json],filename,{type:"application/json"});
@@ -1872,7 +1949,7 @@ $("backupFile").onchange=async e=>{
   currentSetName=data.currentSetName||"";
   currentSavedId=data.currentSavedId||"";
   main=[...(data.main||[]),...(data.encore||[])].filter((v,i,a)=>a.findIndex(y=>y.id===v.id)===i).map(x=>({id:x.id}));
-  saved=data.saved.map((x,i)=>({id:x.id||("set_"+Date.now()+"_"+i),name:x.name,category:(x.category||SYSTEM_CATEGORY).trim()||SYSTEM_CATEGORY,main:[...(x.main||[]),...(x.encore||[])].filter((v,i,a)=>a.findIndex(y=>y.id===v.id)===i).map(y=>({id:y.id}))}));
+  saved=data.saved.map((x,i)=>({id:x.id||("set_"+Date.now()+"_"+i),name:x.name,category:(x.category||SYSTEM_CATEGORY).trim()||SYSTEM_CATEGORY,favorite:!!x.favorite,main:[...(x.main||[]),...(x.encore||[])].filter((v,i,a)=>a.findIndex(y=>y.id===v.id)===i).map(y=>({id:y.id}))}));
   savedCategories=Array.isArray(data.savedCategories)?uniqueClean([SYSTEM_CATEGORY,...data.savedCategories,...saved.map(x=>x.category)]):uniqueClean([SYSTEM_CATEGORY,...saved.map(x=>x.category)]);
   persist();refreshCategoryControls();renderAll();alert("Backup restored.");
  }catch(err){alert("Could not read the backup file.")}

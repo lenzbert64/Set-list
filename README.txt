@@ -1,7 +1,7 @@
-Set List PWA v1.65
-Base: v1.64.
+Set List PWA v1.66
+Base: v1.65.
 
-Visual change only:
-- Current Set favorite control is always a filled star.
-- Inactive star is faded; active star is full opacity.
-- Favorite behavior and all other functionality are unchanged.
+Bug fix:
+- Fixed display of key H after song editing or direct key selection.
+- H was saved correctly, but the key renderer only recognized A-G, so H appeared blank.
+- No other behavior changed.

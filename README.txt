@@ -1,11 +1,11 @@
-Set List PWA v1.59
-Base: v1.58.
+Set List PWA v1.60
+Base: v1.58 (v1.59 free-form key experiment removed).
 
-Changes:
-- The key/mark field now accepts arbitrary short text, not only note letters.
-- Examples: S, Б, Slow, Acoustic.
-- Standard note names A–G/H still use the fixed note-letter layout and ♯ / ♭ picker.
-- The accidental picker opens only for a standard single-note value such as F, F#, Bb, H.
-- Free-form markers are displayed as plain compact text in the same column.
-- Manual edit and bulk import keep markers up to 8 characters.
-- No other layout or behavior changed.
+Key changes:
+- Key is again strictly a musical key.
+- Fixed 12-key picker: A, Bb, B, C, C#, D, Eb, E, F, F#, G, G#.
+- The picker opens by tapping the key in Repertoire or Current Set, including an empty key area.
+- Editing a song uses the same picker instead of text input.
+- Adding a song uses the same picker instead of text input.
+- Minus removes/sets no key.
+- Bulk import accepts only the same 12 key labels when a key is supplied.

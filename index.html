@@ -449,23 +449,16 @@ input, textarea {
 }
 
 
-/* v1.59: free-form short musical markers in the key/mark column */
-.songkey .keyFree{
-  display:block;
-  width:100%;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-  text-align:right;
-  font-size:14px;
-}
-
+.keyPickerDialog{max-width:330px}
+.keyPickerGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.keyPickerGrid .pickerOption{min-width:0;padding:10px 4px;font-size:17px}
+.keyPickerGrid .keyNone{grid-column:2 / span 2}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="header">
-    <div><h1>Set List</h1><div class="version">Version 1.59</div></div>
+    <div><h1>Set List</h1><div class="version">Version 1.60</div></div>
   </div>
 
   <div class="tabs">
@@ -491,7 +484,7 @@ input, textarea {
         <input id="newTitle" type="text" placeholder="Title" required>
         <input id="newMin" type="number" min="0" max="99" inputmode="numeric" placeholder="min" required>
         <input id="newSec" type="number" min="0" max="59" inputmode="numeric" placeholder="sec" required>
-        <input id="newKey" type="text" maxlength="8" placeholder="Key" autocapitalize="characters">
+        <button id="newKey" type="button" class="btn" data-value="">Key</button>
         <select id="newProject"></select>
         <button class="btn primary add" type="submit">Add</button>
       </form>
@@ -597,12 +590,22 @@ input, textarea {
 </div>
 
 <div id="accidentalPicker" class="pickerOverlay" hidden>
-  <div class="pickerDialog" role="dialog" aria-modal="true" aria-labelledby="accidentalPickerTitle">
-    <div id="accidentalPickerTitle" class="pickerTitle">Accidental</div>
-    <div class="pickerOptions">
-      <button id="accSharp" type="button" class="btn pickerOption">♯</button>
-      <button id="accFlat" type="button" class="btn pickerOption">♭</button>
-      <button id="accNone" type="button" class="btn pickerOption">−</button>
+  <div class="pickerDialog keyPickerDialog" role="dialog" aria-modal="true" aria-labelledby="accidentalPickerTitle">
+    <div id="accidentalPickerTitle" class="pickerTitle">Key</div>
+    <div class="keyPickerGrid">
+      <button type="button" class="btn pickerOption" data-key="A">A</button>
+      <button type="button" class="btn pickerOption" data-key="Bb">B♭</button>
+      <button type="button" class="btn pickerOption" data-key="B">B</button>
+      <button type="button" class="btn pickerOption" data-key="C">C</button>
+      <button type="button" class="btn pickerOption" data-key="C#">C♯</button>
+      <button type="button" class="btn pickerOption" data-key="D">D</button>
+      <button type="button" class="btn pickerOption" data-key="Eb">E♭</button>
+      <button type="button" class="btn pickerOption" data-key="E">E</button>
+      <button type="button" class="btn pickerOption" data-key="F">F</button>
+      <button type="button" class="btn pickerOption" data-key="F#">F♯</button>
+      <button type="button" class="btn pickerOption" data-key="G">G</button>
+      <button type="button" class="btn pickerOption" data-key="G#">G♯</button>
+      <button type="button" class="btn pickerOption keyNone" data-key="">−</button>
     </div>
     <button id="accCancel" type="button" class="btn pickerCancel">Cancel</button>
   </div>
@@ -1002,12 +1005,7 @@ async function editSong(id){
  const secText=prompt("Seconds (0–59):",String(s.duration%60)); if(secText===null)return;
  const min=Number(minText),sec=Number(secText);
  if(!Number.isInteger(min)||min<0||!Number.isInteger(sec)||sec<0||sec>59){alert("Invalid duration.");return}
- const keyText=prompt("Key (optional):",s.key||""); if(keyText===null)return;
- const key=keyText.trim() ? keyText.trim().slice(0,8) : "";
-
- // Let the native iOS prompt fully dismiss before showing our category dialog.
- // This prevents the OK tap from leaking into the dialog underneath.
- await new Promise(resolve=>setTimeout(resolve,350));
+ const key=await chooseKey(s.key||""); if(key===null)return;
  const picked=await pickCategory(repCategories,s.project,{newPrompt:"New Repertoire category name:"});
  if(!picked)return;
  let project=repCategories.find(x=>x.toLowerCase()===picked.category.toLowerCase());
@@ -1202,64 +1200,67 @@ function bindRepSwipe(wrap,row,song){
 
 
 let accidentalSongId=null;
-
+let keyPickerResolve=null;
 
 function keyDisplayHTML(raw){
  const k=(raw||"").trim();
  if(!k)return "";
-
- // Standard note names keep the fixed-letter / accidental layout.
- // Any other short marker (e.g. S, Б, Slow) is shown as plain text.
- const m=k.match(/^([A-Ga-gHh])([#♯b♭])?$/);
- if(!m)return `<span class="keyFree">${escapeHTML(k)}</span>`;
-
- const base=m[1].toUpperCase();
- const acc=m[2] ? (m[2]==="#"||m[2]==="♯" ? "♯" : "♭") : "";
+ const base=baseKeyLetter(k);
+ if(!base)return "";
+ let acc="";
+ if(k.includes("#")||k.includes("♯"))acc="♯";
+ else if(k.includes("b")||k.includes("♭"))acc="♭";
  return `<span class="keyBase">${base}</span>${acc?`<span class="keyAcc">${acc}</span>`:""}`;
-}
-
-function escapeHTML(s){
- return String(s).replace(/[&<>"']/g,ch=>{
-  if(ch==="&")return "&amp;";
-  if(ch==="<")return "&lt;";
-  if(ch===">")return "&gt;";
-  if(ch==='"')return "&quot;";
-  return "&#39;";
- });
 }
 
 function baseKeyLetter(raw){
  const k=(raw||"").trim();
- const m=k.match(/[A-Ga-gHh]/);
+ const m=k.match(/[A-Ga-g]/);
  return m ? m[0].toUpperCase() : "";
 }
 
-function openAccidentalPicker(songId){
- const s=byId(songId);
- if(!s)return;
- const k=(s.key||"").trim();
- if(!/^([A-Ga-gHh])([#♯b♭])?$/.test(k))return;
+function openKeyPickerForSong(songId){
  accidentalSongId=songId;
+ keyPickerResolve=null;
  $("accidentalPicker").hidden=false;
 }
 
-function closeAccidentalPicker(){
- $("accidentalPicker").hidden=true;
- accidentalSongId=null;
+function chooseKey(current=""){
+ return new Promise(resolve=>{
+  accidentalSongId=null;
+  keyPickerResolve=resolve;
+  $("accidentalPicker").hidden=false;
+ });
 }
 
-function setSongAccidental(mark){
- const s=byId(accidentalSongId);
- if(!s)return closeAccidentalPicker();
- const base=baseKeyLetter(s.key);
- if(!base)return closeAccidentalPicker();
+function closeAccidentalPicker(cancelled=true){
+ $("accidentalPicker").hidden=true;
+ accidentalSongId=null;
+ if(keyPickerResolve){
+  const resolve=keyPickerResolve;
+  keyPickerResolve=null;
+  if(cancelled)resolve(null);
+ }
+}
 
- // Store simple ASCII form for compatibility with the existing editor/backups.
- // "−" means no accidental: keep only the base note letter.
- s.key=mark==="−" ? base : base+(mark==="♯"?"#":"b");
- persist();
- closeAccidentalPicker();
- renderAll();
+function setPickedKey(value){
+ if(accidentalSongId){
+  const s=byId(accidentalSongId);
+  if(s){
+   s.key=value;
+   persist();
+   renderAll();
+  }
+  $("accidentalPicker").hidden=true;
+  accidentalSongId=null;
+  return;
+ }
+ if(keyPickerResolve){
+  const resolve=keyPickerResolve;
+  keyPickerResolve=null;
+  $("accidentalPicker").hidden=true;
+  resolve(value);
+ }
 }
 
 function bindKeyTap(el,songId){
@@ -1268,11 +1269,10 @@ function bindKeyTap(el,songId){
  el.addEventListener("click",e=>{
   e.preventDefault();
   e.stopPropagation();
-  openAccidentalPicker(songId);
+  openKeyPickerForSong(songId);
  });
  el.addEventListener("touchstart",e=>e.stopPropagation(),{passive:true});
 }
-
 
 function renderRep(){
  openRepSwipe=null;
@@ -1612,12 +1612,15 @@ $("bulkProject").onchange=()=>{
 
 
 
-$("addForm").onsubmit=e=>{
+$("addForm").onsubmit=async e=>{
  e.preventDefault();
- const title=$("newTitle").value.trim(),min=Number($("newMin").value),sec=Number($("newSec").value),key=$("newKey").value.trim();
+ const title=$("newTitle").value.trim(),min=Number($("newMin").value),sec=Number($("newSec").value);
  if(!title||!Number.isInteger(min)||!Number.isInteger(sec)||min<0||sec<0||sec>59)return;
+ const key=await chooseKey($("newKey").dataset.value||"");
+ if(key===null)return;
  songs.push({id:"s"+Date.now(),title,duration:min*60+sec,key,project:$("newProject").value});
- $("newTitle").value="";$("newMin").value="";$("newSec").value="";$("newKey").value="";
+ $("newTitle").value="";$("newMin").value="";$("newSec").value="";
+ $("newKey").dataset.value="";$("newKey").textContent="Key";
  persist();renderRep();
 };
 $("bulkAdd").onclick=()=>{
@@ -1645,13 +1648,9 @@ $("bulkAdd").onclick=()=>{
 
   // Anything after the time is optional key text; trim common separators.
   let key=(m[4]||"").trim().replace(/^[—–-]+\s*/,"").trim();
-  // Keep arbitrary short markers (e.g. S, Б, Slow) as entered.
-  // Standard note accidentals are normalized for compatibility.
-  const km=key.match(/^([A-Ga-gHh])\s*([#♯b♭])?$/);
-  if(km){
-   key=km[1].toUpperCase() + (km[2]?(km[2]==="♯"?"#":km[2]==="♭"?"b":km[2]):"");
-  }
-  if(key.length>8)key=key.slice(0,8);
+  const normalized=key.replace("♯","#").replace("♭","b");
+  const allowedKeys=["A","Bb","B","C","C#","D","Eb","E","F","F#","G","G#"];
+  key=allowedKeys.find(x=>x.toLowerCase()===normalized.toLowerCase()) || "";
 
   songs.push({
    id:"s"+Date.now()+"_"+i+"_"+Math.random().toString(36).slice(2,7),
@@ -1844,12 +1843,12 @@ $("backupFile").onchange=async e=>{
 };
 
 persist();refreshCategoryControls();
-$("accSharp").onclick=()=>setSongAccidental("♯");
-$("accFlat").onclick=()=>setSongAccidental("♭");
-$("accNone").onclick=()=>setSongAccidental("−");
-$("accCancel").onclick=closeAccidentalPicker;
+document.querySelectorAll("#accidentalPicker [data-key]").forEach(btn=>{
+ btn.onclick=()=>setPickedKey(btn.dataset.key);
+});
+$("accCancel").onclick=()=>closeAccidentalPicker(true);
 $("accidentalPicker").onclick=e=>{
- if(e.target===$("accidentalPicker"))closeAccidentalPicker();
+ if(e.target===$("accidentalPicker"))closeAccidentalPicker(true);
 };
 
 renderAll();

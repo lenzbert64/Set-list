@@ -452,13 +452,13 @@ input, textarea {
 .keyPickerDialog{max-width:330px}
 .keyPickerGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .keyPickerGrid .pickerOption{min-width:0;padding:10px 4px;font-size:17px}
-.keyPickerGrid .keyNone{grid-column:2 / span 2}
+.keyPickerGrid .keyNone{}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="header">
-    <div><h1>Set List</h1><div class="version">Version 1.60</div></div>
+    <div><h1>Set List</h1><div class="version">Version 1.61</div></div>
   </div>
 
   <div class="tabs">
@@ -593,18 +593,21 @@ input, textarea {
   <div class="pickerDialog keyPickerDialog" role="dialog" aria-modal="true" aria-labelledby="accidentalPickerTitle">
     <div id="accidentalPickerTitle" class="pickerTitle">Key</div>
     <div class="keyPickerGrid">
-      <button type="button" class="btn pickerOption" data-key="A">A</button>
-      <button type="button" class="btn pickerOption" data-key="Bb">B♭</button>
-      <button type="button" class="btn pickerOption" data-key="B">B</button>
       <button type="button" class="btn pickerOption" data-key="C">C</button>
       <button type="button" class="btn pickerOption" data-key="C#">C♯</button>
       <button type="button" class="btn pickerOption" data-key="D">D</button>
-      <button type="button" class="btn pickerOption" data-key="Eb">E♭</button>
+      <button type="button" class="btn pickerOption" data-key="D#">D♯</button>
       <button type="button" class="btn pickerOption" data-key="E">E</button>
       <button type="button" class="btn pickerOption" data-key="F">F</button>
       <button type="button" class="btn pickerOption" data-key="F#">F♯</button>
       <button type="button" class="btn pickerOption" data-key="G">G</button>
       <button type="button" class="btn pickerOption" data-key="G#">G♯</button>
+      <button type="button" class="btn pickerOption" data-key="A">A</button>
+      <button type="button" class="btn pickerOption" data-key="A#">A♯</button>
+      <button type="button" class="btn pickerOption" data-key="B">B</button>
+      <button type="button" class="btn pickerOption" data-key="H">H</button>
+      <button type="button" class="btn pickerOption" data-key="Bb">B♭</button>
+      <button type="button" class="btn pickerOption" data-key="Eb">E♭</button>
       <button type="button" class="btn pickerOption keyNone" data-key="">−</button>
     </div>
     <button id="accCancel" type="button" class="btn pickerCancel">Cancel</button>
@@ -1614,7 +1617,10 @@ $("bulkProject").onchange=()=>{
 
 $("addForm").onsubmit=async e=>{
  e.preventDefault();
- const title=$("newTitle").value.trim(),min=Number($("newMin").value),sec=Number($("newSec").value);
+ const title=$("newTitle").value.trim();
+ const minText=$("newMin").value.trim(),secText=$("newSec").value.trim();
+ const min=minText===""?0:Number(minText);
+ const sec=secText===""?0:Number(secText);
  if(!title||!Number.isInteger(min)||!Number.isInteger(sec)||min<0||sec<0||sec>59)return;
  const key=await chooseKey($("newKey").dataset.value||"");
  if(key===null)return;
@@ -1649,7 +1655,7 @@ $("bulkAdd").onclick=()=>{
   // Anything after the time is optional key text; trim common separators.
   let key=(m[4]||"").trim().replace(/^[—–-]+\s*/,"").trim();
   const normalized=key.replace("♯","#").replace("♭","b");
-  const allowedKeys=["A","Bb","B","C","C#","D","Eb","E","F","F#","G","G#"];
+  const allowedKeys=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B","H","Bb","Eb"];
   key=allowedKeys.find(x=>x.toLowerCase()===normalized.toLowerCase()) || "";
 
   songs.push({

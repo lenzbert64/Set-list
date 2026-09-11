@@ -1,8 +1,0 @@
-{
-  "name": "Set List",
-  "short_name": "Set List",
-  "start_url": "./",
-  "display": "standalone",
-  "background_color": "#111214",
-  "theme_color": "#111214"
-}

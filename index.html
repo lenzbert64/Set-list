@@ -448,12 +448,24 @@ input, textarea {
   line-height:1;
 }
 
+
+/* v1.59: free-form short musical markers in the key/mark column */
+.songkey .keyFree{
+  display:block;
+  width:100%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  text-align:right;
+  font-size:14px;
+}
+
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="header">
-    <div><h1>Set List</h1><div class="version">Version 1.58</div></div>
+    <div><h1>Set List</h1><div class="version">Version 1.59</div></div>
   </div>
 
   <div class="tabs">
@@ -991,7 +1003,7 @@ async function editSong(id){
  const min=Number(minText),sec=Number(secText);
  if(!Number.isInteger(min)||min<0||!Number.isInteger(sec)||sec<0||sec>59){alert("Invalid duration.");return}
  const keyText=prompt("Key (optional):",s.key||""); if(keyText===null)return;
- const key=keyText.trim() ? keyText.trim() : "";
+ const key=keyText.trim() ? keyText.trim().slice(0,8) : "";
 
  // Let the native iOS prompt fully dismiss before showing our category dialog.
  // This prevents the OK tap from leaking into the dialog underneath.
@@ -1195,12 +1207,25 @@ let accidentalSongId=null;
 function keyDisplayHTML(raw){
  const k=(raw||"").trim();
  if(!k)return "";
- const base=baseKeyLetter(k);
- if(!base)return "";
- let acc="";
- if(k.includes("#")||k.includes("♯"))acc="♯";
- else if(k.includes("b")||k.includes("♭"))acc="♭";
+
+ // Standard note names keep the fixed-letter / accidental layout.
+ // Any other short marker (e.g. S, Б, Slow) is shown as plain text.
+ const m=k.match(/^([A-Ga-gHh])([#♯b♭])?$/);
+ if(!m)return `<span class="keyFree">${escapeHTML(k)}</span>`;
+
+ const base=m[1].toUpperCase();
+ const acc=m[2] ? (m[2]==="#"||m[2]==="♯" ? "♯" : "♭") : "";
  return `<span class="keyBase">${base}</span>${acc?`<span class="keyAcc">${acc}</span>`:""}`;
+}
+
+function escapeHTML(s){
+ return String(s).replace(/[&<>"']/g,ch=>{
+  if(ch==="&")return "&amp;";
+  if(ch==="<")return "&lt;";
+  if(ch===">")return "&gt;";
+  if(ch==='"')return "&quot;";
+  return "&#39;";
+ });
 }
 
 function baseKeyLetter(raw){
@@ -1211,7 +1236,9 @@ function baseKeyLetter(raw){
 
 function openAccidentalPicker(songId){
  const s=byId(songId);
- if(!s || !baseKeyLetter(s.key))return;
+ if(!s)return;
+ const k=(s.key||"").trim();
+ if(!/^([A-Ga-gHh])([#♯b♭])?$/.test(k))return;
  accidentalSongId=songId;
  $("accidentalPicker").hidden=false;
 }
@@ -1618,9 +1645,13 @@ $("bulkAdd").onclick=()=>{
 
   // Anything after the time is optional key text; trim common separators.
   let key=(m[4]||"").trim().replace(/^[—–-]+\s*/,"").trim();
-  // Keep key compact and compatible with the app's current key display.
-  const km=key.match(/^([A-Ga-gHh])\s*([#♯b♭])?/);
-  key=km ? km[1].toUpperCase() + (km[2]?(km[2]==="♯"?"#":km[2]==="♭"?"b":km[2]):"") : "";
+  // Keep arbitrary short markers (e.g. S, Б, Slow) as entered.
+  // Standard note accidentals are normalized for compatibility.
+  const km=key.match(/^([A-Ga-gHh])\s*([#♯b♭])?$/);
+  if(km){
+   key=km[1].toUpperCase() + (km[2]?(km[2]==="♯"?"#":km[2]==="♭"?"b":km[2]):"");
+  }
+  if(key.length>8)key=key.slice(0,8);
 
   songs.push({
    id:"s"+Date.now()+"_"+i+"_"+Math.random().toString(36).slice(2,7),

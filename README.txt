@@ -1,17 +1,11 @@
-Set List PWA v1.58
-Base: v1.57.
+Set List PWA v1.59
+Base: v1.58.
 
-Fixes:
-1. Song editing / category confirmation
-- Removed the 300 ms category-option tap suppression.
-- Added a 350 ms delay after the native Key prompt before opening the category picker.
-- This prevents the prompt's OK tap from leaking into the category dialog while allowing the first real category tap to work normally.
-
-2. Add songs as a list
-- Bulk parser is now more tolerant.
-- Accepts m:ss or mm:ss, including one-digit seconds.
-- Accepts common dash separators and flexible spacing.
-- Key remains optional.
-- On partial import, successfully added songs are saved and only the unrecognized lines remain in the text box for correction.
-
-No other layout or behavior changed.
+Changes:
+- The key/mark field now accepts arbitrary short text, not only note letters.
+- Examples: S, Б, Slow, Acoustic.
+- Standard note names A–G/H still use the fixed note-letter layout and ♯ / ♭ picker.
+- The accidental picker opens only for a standard single-note value such as F, F#, Bb, H.
+- Free-form markers are displayed as plain compact text in the same column.
+- Manual edit and bulk import keep markers up to 8 characters.
+- No other layout or behavior changed.

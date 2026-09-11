@@ -1,13 +1,7 @@
-Set List PWA v1.64
-Base: v1.63.
+Set List PWA v1.65
+Base: v1.64.
 
-Added:
-- A small star button on the right side of the saved-set name in Current Set.
-- Tap ☆ / ★ to mark or unmark the linked Saved Set.
-- The change is saved immediately; Update current set is not required.
-- Starred sets display ★ next to their name in Saved Sets.
-- Favorite state is included in Backup / Restore.
-- Old saved data and old backups remain compatible.
-
-No other functional changes.
-Caching remains disabled during stabilization.
+Visual change only:
+- Current Set favorite control is always a filled star.
+- Inactive star is faded; active star is full opacity.
+- Favorite behavior and all other functionality are unchanged.

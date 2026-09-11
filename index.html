@@ -458,7 +458,7 @@ input, textarea {
 <body>
 <div class="wrap">
   <div class="header">
-    <div><h1>Set List</h1><div class="version">Version 1.62</div></div>
+    <div><h1>Set List</h1><div class="version">Version 1.63</div></div>
   </div>
 
   <div class="tabs">
@@ -1077,13 +1077,27 @@ function reorderVisibleSongs(visibleIds){
 function enableHandleDrag(handle,row,host,onFinish,onStart){
  let active=false;
 
+ // Repertoire rows live inside .repSwipeWrap because of swipe-to-delete.
+ // Current Set rows are direct children of their host.
+ const dragUnit=()=>row.parentElement && row.parentElement.classList.contains("repSwipeWrap")
+   ? row.parentElement
+   : row;
+
  const moveRowToPoint=(x,y)=>{
   const targetEl=document.elementFromPoint(x,y);
   const target=targetEl && targetEl.closest ? targetEl.closest(".row, .setrow") : null;
-  if(!target || target===row || target.parentElement!==host)return;
-  const b=target.getBoundingClientRect();
-  if(y < b.top + b.height/2) host.insertBefore(row,target);
-  else host.insertBefore(row,target.nextSibling);
+  if(!target || target===row)return;
+
+  const targetUnit=target.parentElement && target.parentElement.classList.contains("repSwipeWrap")
+    ? target.parentElement
+    : target;
+
+  const unit=dragUnit();
+  if(targetUnit===unit || targetUnit.parentElement!==host)return;
+
+  const b=targetUnit.getBoundingClientRect();
+  if(y < b.top + b.height/2) host.insertBefore(unit,targetUnit);
+  else host.insertBefore(unit,targetUnit.nextSibling);
  };
 
  // iPhone / iPad Safari

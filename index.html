@@ -458,7 +458,7 @@ input, textarea {
 <body>
 <div class="wrap">
   <div class="header">
-    <div><h1>Set List</h1><div class="version">Version 1.61</div></div>
+    <div><h1>Set List</h1><div class="version">Version 1.62</div></div>
   </div>
 
   <div class="tabs">
@@ -482,8 +482,8 @@ input, textarea {
       <summary>Add song</summary>
       <form id="addForm" class="form">
         <input id="newTitle" type="text" placeholder="Title" required>
-        <input id="newMin" type="number" min="0" max="99" inputmode="numeric" placeholder="min" required>
-        <input id="newSec" type="number" min="0" max="59" inputmode="numeric" placeholder="sec" required>
+        <input id="newMin" type="number" min="0" max="99" inputmode="numeric" placeholder="min">
+        <input id="newSec" type="number" min="0" max="59" inputmode="numeric" placeholder="sec">
         <button id="newKey" type="button" class="btn" data-value="">Key</button>
         <select id="newProject"></select>
         <button class="btn primary add" type="submit">Add</button>
@@ -668,6 +668,8 @@ if(!currentSavedId && currentSetName){
  if(linked)currentSavedId=linked.id;
 }
 let savedCategories=JSON.parse(localStorage.getItem("setlist_saved_categories")||"null");
+let lastRepFilter=localStorage.getItem("setlist_rep_filter")||"All";
+let lastSavedFilter=localStorage.getItem("setlist_saved_filter")||"All";
 if(!Array.isArray(savedCategories)){
  savedCategories=uniqueClean([SYSTEM_CATEGORY,...saved.map(x=>x.category)]);
 }else{
@@ -780,6 +782,10 @@ function refreshCategoryControls(){
  fillCategorySelect($("bulkProject"),repCategories,{includeNew:true});
  fillCategorySelect($("savedFilter"),savedCategories,{includeAll:true,includeNew:true});
  fillCategorySelect($("setCategory"),savedCategories,{includeNew:true});
+ const repValues=[...$("filter").options].map(o=>o.value);
+ const savedValues=[...$("savedFilter").options].map(o=>o.value);
+ if(repValues.includes(lastRepFilter))$("filter").value=lastRepFilter;
+ if(savedValues.includes(lastSavedFilter))$("savedFilter").value=lastSavedFilter;
  updateCategoryManageButtons();
 }
 
@@ -1008,6 +1014,7 @@ async function editSong(id){
  const secText=prompt("Seconds (0–59):",String(s.duration%60)); if(secText===null)return;
  const min=Number(minText),sec=Number(secText);
  if(!Number.isInteger(min)||min<0||!Number.isInteger(sec)||sec<0||sec>59){alert("Invalid duration.");return}
+ await new Promise(resolve=>setTimeout(resolve,350));
  const key=await chooseKey(s.key||""); if(key===null)return;
  const picked=await pickCategory(repCategories,s.project,{newPrompt:"New Repertoire category name:"});
  if(!picked)return;
@@ -1582,6 +1589,8 @@ $("filter").onchange=()=>{
   refreshCategoryControls();
   $("filter").value=cat||"All";
  }
+ lastRepFilter=$("filter").value;
+ localStorage.setItem("setlist_rep_filter",lastRepFilter);
  updateCategoryManageButtons();
  renderRep();
 };
@@ -1591,6 +1600,8 @@ $("savedFilter").onchange=()=>{
   refreshCategoryControls();
   $("savedFilter").value=cat||"All";
  }
+ lastSavedFilter=$("savedFilter").value;
+ localStorage.setItem("setlist_saved_filter",lastSavedFilter);
  updateCategoryManageButtons();
  renderSaved();updateSavedUndoButton();
 };
@@ -1615,15 +1626,21 @@ $("bulkProject").onchange=()=>{
 
 
 
-$("addForm").onsubmit=async e=>{
+$("newKey").onclick=async ()=>{
+ const key=await chooseKey($("newKey").dataset.value||"");
+ if(key===null)return;
+ $("newKey").dataset.value=key;
+ $("newKey").innerHTML=key ? keyDisplayHTML(key) : "Key";
+};
+
+$("addForm").onsubmit=e=>{
  e.preventDefault();
  const title=$("newTitle").value.trim();
  const minText=$("newMin").value.trim(),secText=$("newSec").value.trim();
  const min=minText===""?0:Number(minText);
  const sec=secText===""?0:Number(secText);
  if(!title||!Number.isInteger(min)||!Number.isInteger(sec)||min<0||sec<0||sec>59)return;
- const key=await chooseKey($("newKey").dataset.value||"");
- if(key===null)return;
+ const key=$("newKey").dataset.value||"";
  songs.push({id:"s"+Date.now(),title,duration:min*60+sec,key,project:$("newProject").value});
  $("newTitle").value="";$("newMin").value="";$("newSec").value="";
  $("newKey").dataset.value="";$("newKey").textContent="Key";

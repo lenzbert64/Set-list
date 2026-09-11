@@ -453,7 +453,7 @@ input, textarea {
 <body>
 <div class="wrap">
   <div class="header">
-    <div><h1>Set List</h1><div class="version">Version 1.57</div></div>
+    <div><h1>Set List</h1><div class="version">Version 1.58</div></div>
   </div>
 
   <div class="tabs">
@@ -710,31 +710,26 @@ function pickCategory(categories,current,{allowNew=true,newPrompt="New category 
   const overlay=$("categoryPicker"),options=$("pickerOptions");
   options.innerHTML="";
   $("pickerTitle").textContent="Category";
-  const openedAt=Date.now();
-  const safeActivate=fn=>()=>{
-   if(Date.now()-openedAt<300)return;
-   fn();
-  };
   const close=value=>{overlay.hidden=true;resolve(value)};
   categories.forEach(cat=>{
    const b=document.createElement("button");
    b.type="button";b.className="btn pickerOption"+(cat===current?" selected":"");
    b.textContent=(cat===current?"✓ ":"")+cat;
-   b.onclick=()=>safeActivate(()=>close({category:cat,isNew:false}));
+   b.onclick=()=>close({category:cat,isNew:false});
    options.appendChild(b);
   });
   if(allowNew){
    const b=document.createElement("button");
    b.type="button";b.className="btn pickerOption";
    b.textContent="＋ New category…";
-   b.onclick=()=>safeActivate(()=>{
+   b.onclick=()=>{
     overlay.hidden=true;
     const name=prompt(newPrompt);
     if(name===null){resolve(null);return}
     const clean=name.trim();
     if(!clean){alert("Category name cannot be empty.");resolve(null);return}
     resolve({category:clean,isNew:true});
-   });
+   };
    options.appendChild(b);
   }
   $("pickerCancel").onclick=()=>close(null);
@@ -998,6 +993,9 @@ async function editSong(id){
  const keyText=prompt("Key (optional):",s.key||""); if(keyText===null)return;
  const key=keyText.trim() ? keyText.trim() : "";
 
+ // Let the native iOS prompt fully dismiss before showing our category dialog.
+ // This prevents the OK tap from leaking into the dialog underneath.
+ await new Promise(resolve=>setTimeout(resolve,350));
  const picked=await pickCategory(repCategories,s.project,{newPrompt:"New Repertoire category name:"});
  if(!picked)return;
  let project=repCategories.find(x=>x.toLowerCase()===picked.category.toLowerCase());
@@ -1600,18 +1598,49 @@ $("bulkAdd").onclick=()=>{
  if(!text){$("bulkResult").textContent="Paste a list of songs.";return}
  const project=$("bulkProject").value;
  const lines=text.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
- let added=0;const skipped=[];
+ let added=0;
+ const skipped=[];
+ const failedLines=[];
+
  lines.forEach((line,i)=>{
-  const m=line.match(/^(.*?)\s*(?:[—–-]\s*)?(\d{1,2}):([0-5]\d)(?:\s*[—–-]\s*([A-Ga-g](?:#|b)?(?:m|maj|min|sus|dim|aug)?\d*))?\s*$/);
-  if(!m){skipped.push(i+1);return}
+  // Find the first mm:ss / m:ss time anywhere in the line.
+  // This is deliberately tolerant of different dash characters and spacing.
+  const m=line.match(/^(.*?)\s*(?:[—–-]\s*)?(\d{1,2}):([0-5]?\d)(.*)$/);
+  if(!m){
+   skipped.push(i+1);failedLines.push(line);return;
+  }
+
   const title=m[1].trim().replace(/[—–-]\s*$/,"").trim();
-  if(!title){skipped.push(i+1);return}
-  const key=(m[4]||"").trim();
-  songs.push({id:"s"+Date.now()+"_"+i+"_"+Math.random().toString(36).slice(2,7),title,duration:Number(m[2])*60+Number(m[3]),key,project});
+  const min=Number(m[2]),sec=Number(m[3]);
+  if(!title || !Number.isInteger(min) || !Number.isInteger(sec) || sec<0 || sec>59){
+   skipped.push(i+1);failedLines.push(line);return;
+  }
+
+  // Anything after the time is optional key text; trim common separators.
+  let key=(m[4]||"").trim().replace(/^[—–-]+\s*/,"").trim();
+  // Keep key compact and compatible with the app's current key display.
+  const km=key.match(/^([A-Ga-gHh])\s*([#♯b♭])?/);
+  key=km ? km[1].toUpperCase() + (km[2]?(km[2]==="♯"?"#":km[2]==="♭"?"b":km[2]):"") : "";
+
+  songs.push({
+   id:"s"+Date.now()+"_"+i+"_"+Math.random().toString(36).slice(2,7),
+   title,
+   duration:min*60+sec,
+   key,
+   project
+  });
   added++;
  });
- if(added){persist();renderRep();$("bulkText").value=""}
- $("bulkResult").textContent=skipped.length?`Added: ${added}. Unrecognized lines: ${skipped.join(", ")}.`:`Songs added: ${added}.`;
+
+ if(added){
+  persist();
+  renderRep();
+ }
+ // On partial success, leave only failed lines in the box so they can be corrected.
+ $("bulkText").value=failedLines.join("\n");
+ $("bulkResult").textContent=skipped.length
+  ? `Added: ${added}. Unrecognized lines: ${skipped.join(", ")}.`
+  : `Songs added: ${added}.`;
 };
 
 (()=>{

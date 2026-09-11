@@ -1,5 +1,8 @@
-Set List PWA v1.67
-Base: v1.66.
-Added supplied MessAge logo at upper right, aligned with Set List title.
-Logo converted to white on transparent background.
-No functional behavior changed. Caching remains disabled.
+Set List PWA v1.69
+Base: v1.67.
+
+Visual change only:
+- MessAge logo moved to the far right of the title row.
+- Logo image canvas cropped tightly to the visible artwork.
+- No Current Set sticky-bar/safe-area changes from v1.68 are included.
+- No functional behavior changed.

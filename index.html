@@ -514,7 +514,7 @@ input, textarea {
   <div class="header">
     <div class="titleBlock">
       <h1>Set List</h1>
-      <div class="version">Version 1.71</div>
+      <div class="version">Version 1.72</div>
     </div>
     <img class="messageLogo" src="message-logo.png" alt="MessAge">
   </div>
@@ -780,7 +780,7 @@ function persist(){
  localStorage.setItem("setlist_current_saved_id",currentSavedId);
  localStorage.setItem("setlist_encore","[]");
  localStorage.setItem("setlist_saved_categories",JSON.stringify(savedCategories));
- localStorage.setItem("setlist_saved",JSON.stringify(saved.map(x=>({id:x.id,name:x.name,category:x.category,main:x.main,encore:[]}))));
+ localStorage.setItem("setlist_saved",JSON.stringify(saved.map(x=>({id:x.id,name:x.name,category:x.category,favorite:!!x.favorite,main:x.main,encore:[]}))));
 }
 const byId=id=>songs.find(s=>s.id===id);
 const inSet=id=>main.some(x=>x.id===id);

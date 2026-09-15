@@ -1,8 +1,4 @@
-Set List PWA v2.0 — Offline Final
-Base: v1.72.
-
-Offline support is enabled.
-Open the deployed app online once after uploading all five files. After that the PWA can open and work in Airplane Mode.
-Local data remains in localStorage exactly as before.
-When online, navigation prefers the current GitHub Pages version; offline it falls back to the cached app shell.
-Old cache versions are removed when a new service worker activates.
+Set List PWA v2.1 — Offline cold-launch fix
+Base: stable v1.72.
+Navigation is cache-first so a cold launch in Airplane Mode opens the cached app without trying the network first.
+Upload all five files, open online, close, open online once more, then test in Airplane Mode.

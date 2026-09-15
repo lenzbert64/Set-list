@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#111214">
 <link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Set List</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;color-scheme:light dark}
@@ -507,16 +508,24 @@ input, textarea {
 .messageLogo{display:block;width:auto;height:38px;max-width:42%;object-fit:contain;object-position:right center;flex:0 0 auto;margin-left:auto}
 @media(max-width:650px){.messageLogo{height:34px;max-width:40%}}
 
+.brandedHeader{align-items:flex-start}
+.brandedTitleBlock{display:flex;flex-direction:column;align-items:flex-start}
+.setListHeaderLogo{display:block;width:auto;height:42px;max-width:150px;object-fit:contain;object-position:left center}
+.messageBrand{display:flex;align-items:center;gap:5px;margin-left:auto;padding-top:2px}
+.byLabel{font-size:12px;color:#aeb3bb;line-height:1}
+.messageBrand .messageLogo{height:38px;max-width:130px;margin-left:0}
+@media(max-width:650px){.setListHeaderLogo{height:40px;max-width:145px}.messageBrand .messageLogo{height:34px;max-width:118px}.byLabel{font-size:11px}}
+
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="header">
-    <div class="titleBlock">
-      <h1>Set List</h1>
-      <div class="version">Version 2.1</div>
+  <div class="header brandedHeader">
+    <div class="titleBlock brandedTitleBlock">
+      <img class="setListHeaderLogo" src="setlist-logo.png" alt="Set List">
+      <div class="version">Version 2.2</div>
     </div>
-    <img class="messageLogo" src="message-logo.png" alt="MessAge">
+    <div class="messageBrand"><span class="byLabel">by</span><img class="messageLogo" src="message-logo.png" alt="MessAge"></div>
   </div>
 
   <div class="tabs">

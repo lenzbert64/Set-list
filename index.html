@@ -520,8 +520,22 @@ input, textarea {
 /* v2.3 header alignment */
 .brandedHeader{padding-left:8px;padding-right:0;box-sizing:border-box}
 .brandedTitleBlock{transform:translateX(4px)}
-.messageBrand{gap:2px;transform:translateY(8px);margin-left:auto}
+.messageBrand{gap:0;transform:translateY(8px);margin-left:auto;padding-right:4px}
 .messageBrand .messageLogo{margin-left:0}
+
+/* v2.4 Help */
+.helpLinkWrap{text-align:center;padding:8px 0 2px}
+.helpLink{appearance:none;border:0;background:none;color:#aeb3bb;font:inherit;font-size:14px;text-decoration:underline;text-underline-offset:3px;padding:8px 18px}
+.helpOverlay{position:fixed;inset:0;z-index:1000;background:#101112;color:#f3f3f5;overflow:auto;-webkit-overflow-scrolling:touch}
+.helpPage{max-width:750px;margin:0 auto;padding:calc(12px + env(safe-area-inset-top)) 14px calc(40px + env(safe-area-inset-bottom))}
+.helpTop{position:sticky;top:0;z-index:2;display:grid;grid-template-columns:70px 1fr 70px;align-items:center;background:rgba(16,17,18,.96);padding:8px 0 12px;border-bottom:1px solid #2f3337}
+.helpTopTitle{text-align:center;font-size:22px;font-weight:700}.helpBack{appearance:none;border:0;background:none;color:#aeb3bb;font:inherit;font-size:16px;text-align:left;padding:8px 0}
+.helpIntro,.helpNote{color:#aeb3bb;line-height:1.45}.helpIntro{margin:18px 2px 24px;font-size:15px}
+.helpSection{margin:0 0 34px}.helpSection h2{font-size:23px;margin:0 0 12px}
+.helpShot{border:1px solid #373b40;border-radius:16px;overflow:hidden;background:#0f1011;margin-bottom:14px}.helpShot img{display:block;width:100%;height:auto}
+.helpText{border:1px solid #373b40;background:#1d1f21;border-radius:16px;padding:15px 16px}.helpText p{font-size:15px;line-height:1.46;margin:0 0 10px}.helpText p:last-child{margin-bottom:0}.helpText b{color:#fff}
+.helpGestures{display:grid;grid-template-columns:1fr 1fr;gap:9px}.helpGesture{border:1px solid #373b40;background:#1d1f21;border-radius:14px;padding:13px}.helpGesture b{display:block;margin-bottom:4px}.helpGesture span{font-size:14px;color:#aeb3bb;line-height:1.35}
+@media(max-width:520px){.helpGestures{grid-template-columns:1fr}}
 
 </style>
 </head>
@@ -530,7 +544,7 @@ input, textarea {
   <div class="header brandedHeader">
     <div class="titleBlock brandedTitleBlock">
       <img class="setListHeaderLogo" src="setlist-logo.png" alt="Set List">
-      <div class="version">Version 2.3</div>
+      <div class="version">Version 2.4</div>
     </div>
     <div class="messageBrand"><span class="byLabel">by</span><img class="messageLogo" src="message-logo.png" alt="MessAge"></div>
   </div>
@@ -625,7 +639,43 @@ input, textarea {
       </div>
       <div class="note">Backup includes Repertoire, Current Set, and all Saved Sets.</div>
     </div>
+    <div class="helpLinkWrap"><button id="openHelp" class="helpLink" type="button">Help</button></div>
   </section>
+</div>
+
+<div id="helpOverlay" class="helpOverlay" hidden>
+  <div class="helpPage">
+    <div class="helpTop"><button id="closeHelp" class="helpBack" type="button">‹ Back</button><div class="helpTopTitle">Help</div><div></div></div>
+    <p class="helpIntro">A quick guide to the main controls. Most everyday actions are available directly from the three main screens.</p>
+    <section class="helpSection"><h2>Repertoire</h2><div class="helpShot"><img src="help-repertoire.png" alt="Repertoire"></div><div class="helpText">
+      <p><b>Repertoire</b> is your complete song library. Search by title or use <b>Category</b> to show one band or project.</p>
+      <p><b>⋯ Category menu</b> — rename a category or clear all songs from it. An empty category can also be deleted.</p>
+      <p><b>+ / ✓</b> adds a song to Current Set or removes it. Tap the <b>Key</b> to change it; the key is optional. Drag <b>≡</b> to change song order.</p>
+      <p><b>Press and hold a song title</b> to edit its title, duration or category. <b>Swipe right</b> to reveal Delete.</p>
+      <p><b>Add song</b> adds one song manually. <b>Add songs as a list</b> lets you paste several songs at once.</p>
+      <p class="helpNote">Deleting a song removes it from Repertoire, Current Set and all Saved Sets.</p>
+    </div></section>
+    <section class="helpSection"><h2>Current Set</h2><div class="helpShot"><img src="help-current.png" alt="Current Set"></div><div class="helpText">
+      <p><b>Current Set</b> shows the set you are working on, including song count and total duration. Drag <b>≡</b> to reorder songs, tap <b>−</b> to remove one, tap a key to change it, or press and hold a song title to edit its details.</p>
+      <p>The name above the songs is the Saved Set currently open. <b>★ Favorite</b> marks that Saved Set as a favorite.</p>
+      <p><b>Undo / Redo</b> steps backward or forward through recent changes. <b>Clear current set</b> removes all songs from Current Set.</p>
+      <p><b>Update current set</b> overwrites the Saved Set currently open. Changes are <b>not saved automatically</b>.</p>
+      <p><b>Share / Copy set list</b> exports a simple text list. <b>Save current set</b> creates a new Saved Set with the name and category you choose.</p>
+    </div></section>
+    <section class="helpSection"><h2>Saved Sets</h2><div class="helpShot"><img src="help-saved.png" alt="Saved Sets"></div><div class="helpText">
+      <p><b>Saved Sets</b> stores your set lists. Tap a set name to open it in Current Set. Each row shows song count and total duration; <b>★</b> marks a favorite.</p>
+      <p><b>Category</b> filters Saved Sets independently from Repertoire categories. <b>⋯ Category menu</b> renames a category or clears it; an empty category can also be deleted.</p>
+      <p><b>Press and hold a set name</b> to rename it or change its category. <b>Share / Copy</b> exports it as text; <b>Delete</b> removes it.</p>
+      <p><b>Undo last change</b> restores the most recent Saved Sets change when available.</p>
+      <p><b>Backup / Restore</b> exports or restores your songs, categories, Current Set and Saved Sets.</p>
+    </div></section>
+    <section class="helpSection"><h2>Gestures</h2><div class="helpGestures">
+      <div class="helpGesture"><b>Tap</b><span>Open, select or change a control.</span></div>
+      <div class="helpGesture"><b>Press and hold</b><span>Edit a song or a saved set.</span></div>
+      <div class="helpGesture"><b>Drag ≡</b><span>Change the order of songs.</span></div>
+      <div class="helpGesture"><b>Swipe right</b><span>Reveal Delete for a Repertoire song.</span></div>
+    </div></section>
+  </div>
 </div>
 
 <div id="savedEditOverlay" class="savedEditOverlay" hidden>
@@ -1992,6 +2042,15 @@ $("accidentalPicker").onclick=e=>{
 };
 
 renderAll();
+
+
+const helpOverlay=document.getElementById("helpOverlay");
+const openHelp=document.getElementById("openHelp");
+const closeHelp=document.getElementById("closeHelp");
+if(openHelp&&closeHelp&&helpOverlay){
+ openHelp.addEventListener("click",()=>{helpOverlay.hidden=false;helpOverlay.scrollTop=0;document.body.style.overflow="hidden";});
+ closeHelp.addEventListener("click",()=>{helpOverlay.hidden=true;document.body.style.overflow="";});
+}
 
 if("serviceWorker" in navigator){
  window.addEventListener("load",()=>{navigator.serviceWorker.register("./service-worker.js").catch(()=>{});});

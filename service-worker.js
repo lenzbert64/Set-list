@@ -1,4 +1,4 @@
-const CACHE_NAME="set-list-v2.2";
+const CACHE_NAME="set-list-v2.3";
 const INDEX="./index.html";
 const APP_SHELL=[INDEX,"./manifest.json","./message-logo.png","./setlist-logo.png","./setlist-icon-192.png","./setlist-icon-512.png","./apple-touch-icon.png"];
 self.addEventListener("install",event=>{event.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.addAll(APP_SHELL)).then(()=>self.skipWaiting()));});

@@ -1,7 +1,8 @@
-Set List PWA v1.72
-Base: v1.71.
+Set List PWA v2.0 — Offline Final
+Base: v1.72.
 
-Bug fix:
-- Favorite/star state of Saved Sets is now written to localStorage by persist().
-- The star therefore survives closing and reopening the PWA/browser.
-- No other behavior changed.
+Offline support is enabled.
+Open the deployed app online once after uploading all five files. After that the PWA can open and work in Airplane Mode.
+Local data remains in localStorage exactly as before.
+When online, navigation prefers the current GitHub Pages version; offline it falls back to the cached app shell.
+Old cache versions are removed when a new service worker activates.

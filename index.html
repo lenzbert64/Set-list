@@ -514,7 +514,7 @@ input, textarea {
   <div class="header">
     <div class="titleBlock">
       <h1>Set List</h1>
-      <div class="version">Version 1.72</div>
+      <div class="version">Version 2.0</div>
     </div>
     <img class="messageLogo" src="message-logo.png" alt="MessAge">
   </div>
@@ -1978,9 +1978,10 @@ $("accidentalPicker").onclick=e=>{
 renderAll();
 
 if("serviceWorker" in navigator){
- navigator.serviceWorker.getRegistrations().then(regs=>Promise.all(regs.map(r=>r.unregister()))).catch(()=>{});
+ window.addEventListener("load",()=>{
+  navigator.serviceWorker.register("./service-worker.js").catch(()=>{});
+ });
 }
-if("caches" in window)caches.keys().then(keys=>Promise.all(keys.map(k=>caches.delete(k)))).catch(()=>{});
 
 // Prevent Safari double-tap zoom on app chrome and empty areas.
 let lastTouchEnd=0;

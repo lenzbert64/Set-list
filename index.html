@@ -60,7 +60,7 @@ textarea{width:100%;min-height:120px;resize:vertical}
 #undoSet:disabled,#updateSet:disabled{opacity:.42}
 .holdhint{font-size:11px;color:#8a8f96;margin-top:4px}
 
-.savedrow{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:6px;align-items:center;padding:7px 0;border-top:1px solid #eceef1}
+.savedrow{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;gap:6px;align-items:center;padding:7px 0;border-top:1px solid #eceef1}
 .savedrow:first-child{border-top:0}
 .savedopen{min-width:0;cursor:pointer;padding:3px 0;touch-action:manipulation}
 .savedopen .title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -523,6 +523,14 @@ input, textarea {
 .messageBrand{gap:0;transform:translateY(8px);margin-left:auto;padding-right:4px}
 .messageBrand .messageLogo{margin-left:0}
 
+/* v2.6 Personal branding */
+.robertBrand{display:flex;align-items:center;margin-left:auto;padding-right:4px;transform:translateY(2px)}
+.robertLogo{display:block;width:auto;height:50px;max-width:138px;object-fit:contain;object-position:right center}
+@media(max-width:650px){.robertLogo{height:46px;max-width:128px}}
+.savedIconBtn{width:32px;min-width:32px;height:30px;min-height:30px;padding:0;display:inline-flex;align-items:center;justify-content:center}
+.savedIconBtn svg{width:17px;height:17px;display:block;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.personalFooter{text-align:center;color:#8a8f96;font-size:12px;padding:4px 0 calc(8px + env(safe-area-inset-bottom));letter-spacing:.1px}
+
 /* v2.4 Help */
 .helpLinkWrap{text-align:center;padding:8px 0 2px}
 .helpLink{appearance:none;border:0;background:none;color:#aeb3bb;font:inherit;font-size:14px;text-decoration:underline;text-underline-offset:3px;padding:8px 18px}
@@ -544,9 +552,9 @@ input, textarea {
   <div class="header brandedHeader">
     <div class="titleBlock brandedTitleBlock">
       <img class="setListHeaderLogo" src="setlist-logo.png" alt="Set List">
-      <div class="version">Version 2.5</div>
+      <div class="version">Version 2.6</div>
     </div>
-    <div class="messageBrand"><span class="byLabel">by</span><img class="messageLogo" src="message-logo.png" alt="MessAge"></div>
+    <div class="robertBrand"><img class="robertLogo" src="robert-lenz-logo.png" alt="RobertLens"></div>
   </div>
 
   <div class="tabs">
@@ -640,6 +648,7 @@ input, textarea {
       <div class="note">Backup includes Repertoire, Current Set, and all Saved Sets.</div>
     </div>
     <div class="helpLinkWrap"><button id="openHelp" class="helpLink" type="button">Help</button></div>
+    <div class="personalFooter">© 2026 RobertLens</div>
   </section>
 </div>
 
@@ -665,7 +674,7 @@ input, textarea {
     <section class="helpSection"><h2>Saved Sets</h2><div class="helpShot"><img src="help-saved.png" alt="Saved Sets"></div><div class="helpText">
       <p><b>Saved Sets</b> stores your set lists. Tap a set name to open it in Current Set. Each row shows song count and total duration; <b>★</b> marks a favorite.</p>
       <p><b>Category</b> filters Saved Sets independently from Repertoire categories. <b>⋯ Category menu</b> renames a category or clears it; an empty category can also be deleted.</p>
-      <p><b>Press and hold a set name</b> to rename it or change its category. <b>Share / Copy</b> exports it as text; <b>Delete</b> removes it.</p>
+      <p><b>Press and hold a set name</b> to rename it or change its category. <b>Copy</b> copies it as text, <b>Share</b> opens the system share sheet, and <b>Delete</b> removes it.</p>
       <p><b>Undo last change</b> restores the most recent Saved Sets change when available.</p>
       <p><b>Backup / Restore</b> exports or restores your songs, categories, Current Set and Saved Sets.</p>
     </div></section>
@@ -1657,7 +1666,7 @@ function renderSaved(){
  if(!indexes.length){host.innerHTML='<div class="empty">No saved sets in this category</div>';return}
  indexes.forEach(({x,i})=>{
   const row=document.createElement("div");row.className="savedrow";
-  row.innerHTML='<div class="savedopen" role="button" tabindex="0"><div class="savedTitleLine"><div class="title"></div><span class="savedFavoriteMark" aria-hidden="true" hidden>★</span></div><div class="meta"></div></div><button class="btn savedmini share">Share / Copy</button><button class="btn savedmini del">Delete</button>';
+  row.innerHTML='<div class="savedopen" role="button" tabindex="0"><div class="savedTitleLine"><div class="title"></div><span class="savedFavoriteMark" aria-hidden="true" hidden>★</span></div><div class="meta"></div></div><button class="btn savedmini del" type="button">Delete</button><button class="btn savedmini savedIconBtn copy" type="button" aria-label="Copy set list" title="Copy"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M15 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h3"></path></svg></button><button class="btn savedmini savedIconBtn share" type="button" aria-label="Share set list" title="Share"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="2.5"></circle><circle cx="6" cy="12" r="2.5"></circle><circle cx="18" cy="19" r="2.5"></circle><path d="m8.2 10.8 7.6-4.5M8.2 13.2l7.6 4.5"></path></svg></button>';
   const title=row.querySelector(".title");
   title.textContent=x.name;
   row.querySelector(".savedFavoriteMark").hidden=!x.favorite;
@@ -1678,18 +1687,13 @@ function renderSaved(){
    openSavedSetEditor(i);
   });
 
-  row.querySelector(".share").onclick=async()=>{
+  const savedSetText=()=>{
    const total=x.main.reduce((n,item)=>n+(byId(item.id)?.duration||0),0);
    const lines=x.main.map((item,j)=>`${j+1}. ${byId(item.id)?.title||"Unknown song"}`);
-   const text=`${x.name}\n${x.main.length} songs · Total ${fmt(total)}\n\n${lines.join("\n")}`;
-   try{
-    if(navigator.share){
-     await navigator.share({title:x.name,text});
-     return;
-    }
-   }catch(err){
-    if(err && err.name==="AbortError")return;
-   }
+   return `${x.name}\n${x.main.length} songs · Total ${fmt(total)}\n\n${lines.join("\n")}`;
+  };
+  row.querySelector(".copy").onclick=async()=>{
+   const text=savedSetText();
    try{
     if(navigator.clipboard && navigator.clipboard.writeText){
      await navigator.clipboard.writeText(text);
@@ -1698,14 +1702,16 @@ function renderSaved(){
     }
    }catch(err){}
    const ta=document.createElement("textarea");
-   ta.value=text;
-   ta.style.position="fixed";
-   ta.style.opacity="0";
-   document.body.appendChild(ta);
-   ta.focus();ta.select();
-   const ok=document.execCommand("copy");
-   ta.remove();
+   ta.value=text;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.focus();ta.select();
+   const ok=document.execCommand("copy");ta.remove();
    alert(ok?"Set list copied to clipboard.":"Could not copy the set list.");
+  };
+  row.querySelector(".share").onclick=async()=>{
+   const text=savedSetText();
+   try{
+    if(navigator.share){await navigator.share({title:x.name,text});return;}
+   }catch(err){if(err && err.name==="AbortError")return;}
+   alert("Sharing is not available on this device.");
   };
   row.querySelector(".del").onclick=()=>{
    if(confirm("Delete this saved set?")){
